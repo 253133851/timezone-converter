@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>跨时区时间转换工具</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0f1117;
+      --surface: #1a1d27;
+      --surface2: #242736;
+      --border: #2e3248;
+      --accent: #6c8aff;
+      --accent2: #a78bfa;
+      --text: #e8eaf6;
+      --text-muted: #7b82a6;
+      --text-dim: #4a5180;
+      --success: #4ade80;
+      --shadow: 0 4px 24px rgba(0,0,0,0.4);
+      --radius: 16px;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+      min-height: 100vh;
+      padding: 32px 16px 64px;
+    }
+
+    /* ── Header ─────────────────────────────── */
+    .header {
+      text-align: center;
+      margin-bottom: 40px;
+    }
+    .header h1 {
+      font-size: clamp(1.6rem, 4vw, 2.4rem);
+      font-weight: 700;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      letter-spacing: -0.5px;
+    }
+    .header p {
+      color: var(--text-muted);
+      margin-top: 8px;
+      font-size: 0.95rem;
+    }
+
+    /* ── Live clock bar ──────────────────────── */
+    .live-bar {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      margin-bottom: 36px;
+      flex-wrap: wrap;
+    }
+    .live-dot {
+      width: 8px; height: 8px;
+      background: var(--success);
+      border-radius: 50%;
+      animation: pulse 2s infinite;
+      flex-shrink: 0;
+    }
+    @keyframes pulse {
+      0%,100% { opacity: 1; transform: scale(1); }
+      50%      { opacity: .4; transform: scale(1.4); }
+    }
+    .live-date {
+      font-size: 0.9rem;
+      color: var(--text-muted);
+    }
+    .live-clock {
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--text);
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* ── Slider section ──────────────────────── */
+    .slider-section {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 28px 32px;
+      max-width: 760px;
+      margin: 0 auto 40px;
+      box-shadow: var(--shadow);
+    }
+    .slider-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .slider-label {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+    .slider-value {
+      font-size: 1.6rem;
+      font-weight: 700;
+      font-variant-numeric: tabular-nums;
+      color: var(--text);
+    }
+
+    /* custom range */
+    input[type=range] {
+      -webkit-appearance: none;
+      width: 100%;
+      height: 6px;
+      border-radius: 3px;
+      background: var(--border);
+      outline: none;
+      cursor: pointer;
+    }
+    input[type=range]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 22px; height: 22px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      box-shadow: 0 0 0 4px rgba(108,138,255,0.2);
+      transition: box-shadow .15s;
+    }
+    input[type=range]::-webkit-slider-thumb:hover {
+      box-shadow: 0 0 0 6px rgba(108,138,255,0.3);
+    }
+    input[type=range]::-moz-range-thumb {
+      width: 22px; height: 22px;
+      border: none;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      cursor: pointer;
+    }
+
+    /* track fill */
+    .range-wrap { position: relative; }
+    .range-fill {
+      position: absolute;
+      top: 50%; left: 0;
+      height: 6px;
+      border-radius: 3px 0 0 3px;
+      background: linear-gradient(to right, var(--accent), var(--accent2));
+      pointer-events: none;
+      transform: translateY(-50%);
+    }
+
+    .slider-ticks {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 10px;
+    }
+    .slider-ticks span {
+      font-size: 0.72rem;
+      color: var(--text-dim);
+    }
+
+    /* mode toggle */
+    .mode-toggle {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 20px;
+      padding-top: 20px;
+      border-top: 1px solid var(--border);
+    }
+    .mode-toggle label { font-size: 0.85rem; color: var(--text-muted); cursor: pointer; }
+    .toggle-btn {
+      position: relative;
+      width: 40px; height: 22px;
+      background: var(--border);
+      border-radius: 11px;
+      border: none;
+      cursor: pointer;
+      transition: background .2s;
+    }
+    .toggle-btn.active { background: var(--accent); }
+    .toggle-btn::after {
+      content: '';
+      position: absolute;
+      top: 3px; left: 3px;
+      width: 16px; height: 16px;
+      border-radius: 50%;
+      background: #fff;
+      transition: transform .2s;
+    }
+    .toggle-btn.active::after { transform: translateX(18px); }
+
+    /* ── Grid ────────────────────────────────── */
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 20px;
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+
+    /* ── City card ───────────────────────────── */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px;
+      box-shadow: var(--shadow);
+      transition: transform .2s, border-color .2s;
+      position: relative;
+      overflow: hidden;
+    }
+    .card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+      background: var(--card-accent, var(--accent));
+      border-radius: var(--radius) var(--radius) 0 0;
+    }
+    .card:hover {
+      transform: translateY(-3px);
+      border-color: var(--card-accent, var(--accent));
+    }
+
+    .card-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 16px;
+    }
+    .city-info {}
+    .city-flag { font-size: 1.6rem; line-height: 1; margin-bottom: 4px; }
+    .city-name { font-size: 1rem; font-weight: 600; color: var(--text); }
+    .city-tz   { font-size: 0.75rem; color: var(--text-muted); margin-top: 2px; }
+
+    .copy-btn {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text-muted);
+      font-size: 0.72rem;
+      padding: 5px 10px;
+      cursor: pointer;
+      transition: all .15s;
+      white-space: nowrap;
+    }
+    .copy-btn:hover   { background: var(--border); color: var(--text); }
+    .copy-btn.copied  { background: rgba(74,222,128,.15); border-color: var(--success); color: var(--success); }
+
+    .card-time {
+      font-size: 2.6rem;
+      font-weight: 800;
+      font-variant-numeric: tabular-nums;
+      line-height: 1;
+      letter-spacing: -1px;
+      color: var(--text);
+    }
+    .card-time .ampm {
+      font-size: 1rem;
+      font-weight: 500;
+      color: var(--text-muted);
+      margin-left: 4px;
+      letter-spacing: 0;
+    }
+
+    .card-date {
+      margin-top: 8px;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+
+    .card-offset {
+      display: inline-block;
+      margin-top: 12px;
+      font-size: 0.72rem;
+      color: var(--text-dim);
+      background: var(--surface2);
+      border-radius: 6px;
+      padding: 3px 8px;
+    }
+
+    /* day indicator */
+    .day-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      margin-left: 8px;
+      font-size: 0.65rem;
+      padding: 2px 7px;
+      border-radius: 20px;
+      vertical-align: middle;
+    }
+    .day-badge.next { background: rgba(108,138,255,.15); color: var(--accent); }
+    .day-badge.prev { background: rgba(167,139,250,.15); color: var(--accent2); }
+
+    /* ── Footer ──────────────────────────────── */
+    footer {
+      text-align: center;
+      margin-top: 56px;
+      color: var(--text-dim);
+      font-size: 0.78rem;
+    }
+
+    @media (max-width: 480px) {
+      .slider-section { padding: 20px 18px; }
+      .card-time { font-size: 2rem; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <h1>🌐 跨时区时间转换</h1>
+  <p>拖动滑块，即时查看全球各城市时间</p>
+</div>
+
+<!-- live clock -->
+<div class="live-bar">
+  <span class="live-dot"></span>
+  <span class="live-date" id="liveDate"></span>
+  <span style="color:var(--text-dim)">·</span>
+  <span class="live-clock" id="liveClock"></span>
+</div>
+
+<!-- slider -->
+<div class="slider-section">
+  <div class="slider-header">
+    <div>
+      <div class="slider-label">选择参考时间（北京）</div>
+      <div class="slider-value" id="sliderDisplay">12:00</div>
+    </div>
+  </div>
+  <div class="range-wrap">
+    <div class="range-fill" id="rangeFill"></div>
+    <input type="range" id="timeSlider" min="0" max="1440" step="1" value="720" />
+  </div>
+  <div class="slider-ticks">
+    <span>00:00</span><span>06:00</span><span>12:00</span><span>18:00</span><span>24:00</span>
+  </div>
+  <div class="mode-toggle">
+    <button class="toggle-btn" id="fmtToggle" title="切换12/24小时制"></button>
+    <label for="fmtToggle" onclick="document.getElementById('fmtToggle').click()">12小时制</label>
+  </div>
+</div>
+
+<!-- city grid -->
+<div class="grid" id="cityGrid"></div>
+
+<footer>基于原生 JavaScript · 无外部依赖 · 数据来源于 IANA 时区数据库</footer>
+
+<script>
+  // ── 城市配置 ───────────────────────────────────────────────────────────────
+  const CITIES = [
+    { id:'beijing',   name:'北京',      flag:'🇨🇳', tz:'Asia/Shanghai',        accent:'#6c8aff' },
+    { id:'tokyo',     name:'东京',      flag:'🇯🇵', tz:'Asia/Tokyo',           accent:'#f87171' },
+    { id:'london',    name:'伦敦',      flag:'🇬🇧', tz:'Europe/London',        accent:'#facc15' },
+    { id:'newyork',   name:'纽约',      flag:'🇺🇸', tz:'America/New_York',     accent:'#4ade80' },
+    { id:'mexico',    name:'墨西哥城',  flag:'🇲🇽', tz:'America/Mexico_City',  accent:'#fb923c' },
+    { id:'saopaulo',  name:'圣保罗',    flag:'🇧🇷', tz:'America/Sao_Paulo',    accent:'#a78bfa' },
+    { id:'toronto',   name:'多伦多',    flag:'🇨🇦', tz:'America/Toronto',      accent:'#f43f5e' },
+    { id:'argentina', name:'布宜诺斯艾利斯', flag:'🇦🇷', tz:'America/Argentina/Buenos_Aires', accent:'#22d3ee' },
+    { id:'sydney',    name:'悉尼',      flag:'🇦🇺', tz:'Australia/Sydney',     accent:'#fbbf24' },
+    { id:'cairo',     name:'开罗',      flag:'🇪🇬', tz:'Africa/Cairo',         accent:'#34d399' },
+  ];
+
+  // ── State ──────────────────────────────────────────────────────────────────
+  let use12h = false;
+  let sliderMinutes = 720; // minutes since midnight, Beijing reference
+  let useSlider = false;   // false = live clock mode
+
+  // ── Helpers ───────────────────────────────────────────────────────────────
+  function pad(n) { return String(n).padStart(2,'0'); }
+
+  // get Date object for a given IANA timezone at a specific Beijing minute-of-day
+  // We map "slider minutes" to a wall-clock time in Beijing, then derive others.
+  function getDateForCity(refBeijingMinutes, city) {
+    // Build a reference Date where Beijing local time == refBeijingMinutes
+    // Use today's date in Beijing
+    const now = new Date();
+    const beijingFormatter = new Intl.DateTimeFormat('en-CA', {
+      timeZone: 'Asia/Shanghai',
+      year:'numeric', month:'2-digit', day:'2-digit'
+    });
+    const beijingDateStr = beijingFormatter.format(now); // YYYY-MM-DD
+    const [y,m,d] = beijingDateStr.split('-').map(Number);
+    const h = Math.floor(refBeijingMinutes / 60) % 24;
+    const min = refBeijingMinutes % 60;
+
+    // Create UTC time from Beijing local: Beijing = UTC+8
+    // Build as if it's that local time in Beijing
+    const utcMs = Date.UTC(y, m-1, d, h, min, 0) - 8 * 3600000;
+    return new Date(utcMs);
+  }
+
+  function formatTime(date, tz, fmt12) {
+    const opts = { timeZone: tz, hour:'2-digit', minute:'2-digit', hour12: fmt12 };
+    return new Intl.DateTimeFormat('en-US', opts).format(date);
+  }
+
+  function formatDate(date, tz) {
+    return new Intl.DateTimeFormat('zh-CN', {
+      timeZone: tz,
+      month:'long', day:'numeric', weekday:'short'
+    }).format(date);
+  }
+
+  function getTzOffset(tz) {
+    const now = new Date();
+    const parts = new Intl.DateTimeFormat('en-US', {
+      timeZone: tz, timeZoneName: 'shortOffset'
+    }).formatToParts(now);
+    const tzPart = parts.find(p => p.type === 'timeZoneName');
+    return tzPart ? tzPart.value.replace('GMT', 'UTC') : tz;
+  }
+
+  // ── Build cards ────────────────────────────────────────────────────────────
+  function buildCards() {
+    const grid = document.getElementById('cityGrid');
+    grid.innerHTML = '';
+    CITIES.forEach(city => {
+      const card = document.createElement('div');
+      card.className = 'card';
+      card.id = 'card-' + city.id;
+      card.style.setProperty('--card-accent', city.accent);
+      card.innerHTML = `
+        <div class="card-top">
+          <div class="city-info">
+            <div class="city-flag">${city.flag}</div>
+            <div class="city-name">${city.name}</div>
+            <div class="city-tz" id="tz-${city.id}">${getTzOffset(city.tz)}</div>
+          </div>
+          <button class="copy-btn" id="copy-${city.id}" title="复制时间">复制</button>
+        </div>
+        <div class="card-time" id="time-${city.id}">--:--</div>
+        <div class="card-date" id="date-${city.id}">--</div>
+        <div class="card-offset" id="day-${city.id}"></div>
+      `;
+      grid.appendChild(card);
+
+      document.getElementById('copy-'+city.id).addEventListener('click', () => {
+        const timeEl = document.getElementById('time-'+city.id);
+        const text = timeEl.textContent.trim();
+        navigator.clipboard.writeText(text).then(() => {
+          const btn = document.getElementById('copy-'+city.id);
+          btn.textContent = '已复制 ✓';
+          btn.classList.add('copied');
+          setTimeout(() => { btn.textContent = '复制'; btn.classList.remove('copied'); }, 1800);
+        });
+      });
+    });
+  }
+
+  // ── Update display ─────────────────────────────────────────────────────────
+  function updateAll() {
+    let refDate;
+    if (useSlider) {
+      refDate = getDateForCity(sliderMinutes, CITIES[0]);
+    } else {
+      refDate = new Date();
+    }
+
+    // update slider display (Beijing time)
+    const bjTime = formatTime(refDate, 'Asia/Shanghai', false);
+    document.getElementById('sliderDisplay').textContent = bjTime;
+
+    // sync slider position to live time
+    if (!useSlider) {
+      const bjParts = new Intl.DateTimeFormat('en-US', {
+        timeZone:'Asia/Shanghai', hour:'2-digit', minute:'2-digit', hour12:false
+      }).format(refDate).split(':');
+      const mins = parseInt(bjParts[0]) * 60 + parseInt(bjParts[1]);
+      sliderMinutes = mins;
+      const slider = document.getElementById('timeSlider');
+      slider.value = mins;
+      updateFill(mins);
+    }
+
+    // Beijing is reference; compute day offset for other cities
+    const bjDateStr = new Intl.DateTimeFormat('en-CA', { timeZone:'Asia/Shanghai', year:'numeric', month:'2-digit', day:'2-digit' }).format(refDate);
+
+    CITIES.forEach(city => {
+      const timeStr = formatTime(refDate, city.tz, use12h);
+      const dateStr = formatDate(refDate, city.tz);
+      const cityDateStr = new Intl.DateTimeFormat('en-CA', { timeZone: city.tz, year:'numeric', month:'2-digit', day:'2-digit' }).format(refDate);
+
+      const bjD = new Date(bjDateStr);
+      const cD  = new Date(cityDateStr);
+      const dayDiff = Math.round((cD - bjD) / 86400000);
+
+      let dayBadge = '';
+      if (dayDiff > 0)      dayBadge = `<span class="day-badge next">+${dayDiff}天</span>`;
+      else if (dayDiff < 0) dayBadge = `<span class="day-badge prev">${dayDiff}天</span>`;
+
+      // Render
+      const timeEl = document.getElementById('time-'+city.id);
+      if (use12h) {
+        // split AM/PM
+        const match = timeStr.match(/^(\d+:\d+)\s*(AM|PM)$/i);
+        if (match) {
+          timeEl.innerHTML = `${match[1]}<span class="ampm">${match[2]}</span>`;
+        } else {
+          timeEl.textContent = timeStr;
+        }
+      } else {
+        timeEl.textContent = timeStr;
+      }
+
+      document.getElementById('date-'+city.id).innerHTML = dateStr + dayBadge;
+      document.getElementById('day-'+city.id).textContent = getTzOffset(city.tz);
+    });
+  }
+
+  // ── Live header clock ──────────────────────────────────────────────────────
+  function updateLiveClock() {
+    const now = new Date();
+    const timeStr = new Intl.DateTimeFormat('zh-CN', {
+      hour:'2-digit', minute:'2-digit', second:'2-digit', hour12:false
+    }).format(now);
+    const dateStr = new Intl.DateTimeFormat('zh-CN', {
+      year:'numeric', month:'long', day:'numeric', weekday:'long'
+    }).format(now);
+    document.getElementById('liveClock').textContent = timeStr;
+    document.getElementById('liveDate').textContent = dateStr;
+  }
+
+  // ── Range fill ─────────────────────────────────────────────────────────────
+  function updateFill(val) {
+    const pct = val / 1440 * 100;
+    document.getElementById('rangeFill').style.width = pct + '%';
+  }
+
+  // ── Events ─────────────────────────────────────────────────────────────────
+  const slider = document.getElementById('timeSlider');
+  slider.addEventListener('input', () => {
+    useSlider = true;
+    sliderMinutes = parseInt(slider.value);
+    updateFill(sliderMinutes);
+    updateAll();
+  });
+
+  // double-click slider track = return to live
+  slider.addEventListener('dblclick', () => {
+    useSlider = false;
+    updateAll();
+  });
+
+  const fmtToggle = document.getElementById('fmtToggle');
+  fmtToggle.addEventListener('click', () => {
+    use12h = !use12h;
+    fmtToggle.classList.toggle('active', use12h);
+    updateAll();
+  });
+
+  // ── Init ───────────────────────────────────────────────────────────────────
+  buildCards();
+  updateLiveClock();
+  updateAll();
+
+  // tick every second
+  setInterval(() => {
+    updateLiveClock();
+    if (!useSlider) updateAll();
+  }, 1000);
+</script>
+</body>
+</html>
