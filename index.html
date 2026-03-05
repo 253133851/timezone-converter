@@ -6,327 +6,134 @@
   <title>跨时区时间转换工具</title>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
     :root {
-      --bg: #0f1117;
-      --surface: #1a1d27;
-      --surface2: #242736;
-      --border: #2e3248;
-      --accent: #6c8aff;
-      --accent2: #a78bfa;
-      --text: #e8eaf6;
-      --text-muted: #7b82a6;
-      --text-dim: #4a5180;
-      --success: #4ade80;
-      --shadow: 0 4px 24px rgba(0,0,0,0.4);
-      --radius: 16px;
+      --bg: #0f1117; --surface: #1a1d27; --surface2: #242736; --border: #2e3248;
+      --accent: #6c8aff; --accent2: #a78bfa; --text: #e8eaf6;
+      --text-muted: #7b82a6; --text-dim: #4a5180; --success: #4ade80;
+      --shadow: 0 4px 24px rgba(0,0,0,0.4); --radius: 16px;
     }
+    body { background:var(--bg); color:var(--text); font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif; min-height:100vh; padding:32px 16px 64px; }
 
-    body {
-      background: var(--bg);
-      color: var(--text);
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
-      min-height: 100vh;
-      padding: 32px 16px 64px;
-    }
+    /* Header */
+    .header { text-align:center; margin-bottom:40px; }
+    .header h1 { font-size:clamp(1.6rem,4vw,2.4rem); font-weight:700; background:linear-gradient(135deg,var(--accent),var(--accent2)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; letter-spacing:-0.5px; }
+    .header p { color:var(--text-muted); margin-top:8px; font-size:0.95rem; }
 
-    /* ── Header ─────────────────────────────── */
-    .header {
-      text-align: center;
-      margin-bottom: 40px;
-    }
-    .header h1 {
-      font-size: clamp(1.6rem, 4vw, 2.4rem);
-      font-weight: 700;
-      background: linear-gradient(135deg, var(--accent), var(--accent2));
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-      letter-spacing: -0.5px;
-    }
-    .header p {
-      color: var(--text-muted);
-      margin-top: 8px;
-      font-size: 0.95rem;
-    }
+    /* Live bar */
+    .live-bar { display:flex; align-items:center; justify-content:center; gap:12px; margin-bottom:36px; flex-wrap:wrap; }
+    .live-dot { width:8px; height:8px; background:var(--success); border-radius:50%; animation:pulse 2s infinite; flex-shrink:0; }
+    @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.4;transform:scale(1.4)} }
+    .live-date { font-size:0.9rem; color:var(--text-muted); }
+    .live-clock { font-size:1rem; font-weight:600; color:var(--text); font-variant-numeric:tabular-nums; }
 
-    /* ── Live clock bar ──────────────────────── */
-    .live-bar {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 12px;
-      margin-bottom: 36px;
-      flex-wrap: wrap;
-    }
-    .live-dot {
-      width: 8px; height: 8px;
-      background: var(--success);
-      border-radius: 50%;
-      animation: pulse 2s infinite;
-      flex-shrink: 0;
-    }
-    @keyframes pulse {
-      0%,100% { opacity: 1; transform: scale(1); }
-      50%      { opacity: .4; transform: scale(1.4); }
-    }
-    .live-date {
-      font-size: 0.9rem;
-      color: var(--text-muted);
-    }
-    .live-clock {
-      font-size: 1rem;
-      font-weight: 600;
-      color: var(--text);
-      font-variant-numeric: tabular-nums;
-    }
+    /* Slider */
+    .slider-section { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:28px 32px; max-width:760px; margin:0 auto 40px; box-shadow:var(--shadow); }
+    .slider-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; flex-wrap:wrap; gap:8px; }
+    .slider-label { font-size:0.85rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.08em; }
+    .slider-value { font-size:1.6rem; font-weight:700; font-variant-numeric:tabular-nums; color:var(--text); }
+    input[type=range] { -webkit-appearance:none; width:100%; height:6px; border-radius:3px; background:var(--border); outline:none; cursor:pointer; }
+    input[type=range]::-webkit-slider-thumb { -webkit-appearance:none; width:22px; height:22px; border-radius:50%; background:linear-gradient(135deg,var(--accent),var(--accent2)); box-shadow:0 0 0 4px rgba(108,138,255,.2); transition:box-shadow .15s; }
+    input[type=range]::-webkit-slider-thumb:hover { box-shadow:0 0 0 6px rgba(108,138,255,.3); }
+    input[type=range]::-moz-range-thumb { width:22px; height:22px; border:none; border-radius:50%; background:linear-gradient(135deg,var(--accent),var(--accent2)); cursor:pointer; }
+    .range-wrap { position:relative; }
+    .range-fill { position:absolute; top:50%; left:0; height:6px; border-radius:3px 0 0 3px; background:linear-gradient(to right,var(--accent),var(--accent2)); pointer-events:none; transform:translateY(-50%); }
+    .slider-ticks { display:flex; justify-content:space-between; margin-top:10px; }
+    .slider-ticks span { font-size:0.72rem; color:var(--text-dim); }
+    .mode-toggle { display:flex; align-items:center; gap:8px; margin-top:20px; padding-top:20px; border-top:1px solid var(--border); }
+    .mode-toggle label { font-size:0.85rem; color:var(--text-muted); cursor:pointer; }
+    .toggle-btn { position:relative; width:40px; height:22px; background:var(--border); border-radius:11px; border:none; cursor:pointer; transition:background .2s; }
+    .toggle-btn.active { background:var(--accent); }
+    .toggle-btn::after { content:''; position:absolute; top:3px; left:3px; width:16px; height:16px; border-radius:50%; background:#fff; transition:transform .2s; }
+    .toggle-btn.active::after { transform:translateX(18px); }
 
-    /* ── Slider section ──────────────────────── */
-    .slider-section {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 28px 32px;
-      max-width: 760px;
-      margin: 0 auto 40px;
-      box-shadow: var(--shadow);
-    }
-    .slider-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 20px;
-      flex-wrap: wrap;
-      gap: 8px;
-    }
-    .slider-label {
-      font-size: 0.85rem;
-      color: var(--text-muted);
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-    }
-    .slider-value {
-      font-size: 1.6rem;
-      font-weight: 700;
-      font-variant-numeric: tabular-nums;
-      color: var(--text);
-    }
+    /* Grid */
+    .grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); gap:20px; max-width:1100px; margin:0 auto; }
 
-    /* custom range */
-    input[type=range] {
-      -webkit-appearance: none;
-      width: 100%;
-      height: 6px;
-      border-radius: 3px;
-      background: var(--border);
-      outline: none;
-      cursor: pointer;
-    }
-    input[type=range]::-webkit-slider-thumb {
-      -webkit-appearance: none;
-      width: 22px; height: 22px;
-      border-radius: 50%;
-      background: linear-gradient(135deg, var(--accent), var(--accent2));
-      box-shadow: 0 0 0 4px rgba(108,138,255,0.2);
-      transition: box-shadow .15s;
-    }
-    input[type=range]::-webkit-slider-thumb:hover {
-      box-shadow: 0 0 0 6px rgba(108,138,255,0.3);
-    }
-    input[type=range]::-moz-range-thumb {
-      width: 22px; height: 22px;
-      border: none;
-      border-radius: 50%;
-      background: linear-gradient(135deg, var(--accent), var(--accent2));
-      cursor: pointer;
-    }
+    /* Card */
+    .card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:24px; box-shadow:var(--shadow); transition:transform .2s,border-color .2s,opacity .2s; position:relative; overflow:hidden; user-select:none; }
+    .card::before { content:''; position:absolute; top:0; left:0; right:0; height:3px; background:var(--card-accent,var(--accent)); border-radius:var(--radius) var(--radius) 0 0; }
+    .card:not(.dragging):hover { transform:translateY(-3px); border-color:var(--card-accent,var(--accent)); }
+    .card.dragging { opacity:0.2; transform:scale(0.96); }
+    .card.drag-over { border-color:var(--accent)!important; box-shadow:0 0 0 2px rgba(108,138,255,.35); }
+    .card-top { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:16px; }
+    .city-flag { font-size:1.6rem; line-height:1; margin-bottom:4px; }
+    .city-name { font-size:1rem; font-weight:600; color:var(--text); }
+    .city-tz { font-size:0.75rem; color:var(--text-muted); margin-top:2px; }
+    .card-actions { display:flex; gap:5px; align-items:center; flex-shrink:0; }
+    .copy-btn { background:var(--surface2); border:1px solid var(--border); border-radius:8px; color:var(--text-muted); font-size:0.72rem; padding:5px 10px; cursor:pointer; transition:all .15s; white-space:nowrap; }
+    .copy-btn:hover { background:var(--border); color:var(--text); }
+    .copy-btn.copied { background:rgba(74,222,128,.15); border-color:var(--success); color:var(--success); }
+    .delete-btn { background:transparent; border:1px solid var(--border); border-radius:8px; color:var(--text-dim); font-size:0.78rem; width:26px; height:26px; cursor:pointer; transition:all .15s; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+    .delete-btn:hover { background:rgba(239,68,68,.15); border-color:#ef4444; color:#ef4444; }
+    .drag-handle { color:var(--text-dim); font-size:1.1rem; cursor:grab; padding:2px 3px; transition:color .15s; touch-action:none; flex-shrink:0; line-height:1; display:flex; align-items:center; }
+    .drag-handle:hover { color:var(--text-muted); }
+    .drag-handle:active { cursor:grabbing; }
+    .card-ghost { position:fixed; pointer-events:none; z-index:1000; opacity:0.88; transform:rotate(1.5deg) scale(1.04); box-shadow:0 20px 48px rgba(0,0,0,.65); transition:none; }
+    .card-time { font-size:2.6rem; font-weight:800; font-variant-numeric:tabular-nums; line-height:1; letter-spacing:-1px; color:var(--text); }
+    .card-time .ampm { font-size:1rem; font-weight:500; color:var(--text-muted); margin-left:4px; letter-spacing:0; }
+    .card-date { margin-top:8px; font-size:0.8rem; color:var(--text-muted); }
+    .card-offset { display:inline-block; margin-top:12px; font-size:0.72rem; color:var(--text-dim); background:var(--surface2); border-radius:6px; padding:3px 8px; }
+    .day-badge { display:inline-flex; align-items:center; gap:4px; margin-left:8px; font-size:0.65rem; padding:2px 7px; border-radius:20px; vertical-align:middle; }
+    .day-badge.next { background:rgba(108,138,255,.15); color:var(--accent); }
+    .day-badge.prev { background:rgba(167,139,250,.15); color:var(--accent2); }
 
-    /* track fill */
-    .range-wrap { position: relative; }
-    .range-fill {
-      position: absolute;
-      top: 50%; left: 0;
-      height: 6px;
-      border-radius: 3px 0 0 3px;
-      background: linear-gradient(to right, var(--accent), var(--accent2));
-      pointer-events: none;
-      transform: translateY(-50%);
-    }
+    /* Add button */
+    .add-btn-wrap { text-align:center; max-width:1100px; margin:24px auto 0; }
+    .add-btn { background:var(--surface); border:1px dashed var(--border); border-radius:var(--radius); color:var(--text-muted); font-size:0.9rem; padding:14px 32px; cursor:pointer; transition:all .2s; width:100%; max-width:400px; }
+    .add-btn:hover { border-color:var(--accent); color:var(--accent); background:rgba(108,138,255,.06); }
 
-    .slider-ticks {
-      display: flex;
-      justify-content: space-between;
-      margin-top: 10px;
-    }
-    .slider-ticks span {
-      font-size: 0.72rem;
-      color: var(--text-dim);
-    }
+    /* Modal */
+    .modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,.72); display:flex; align-items:center; justify-content:center; z-index:900; opacity:0; pointer-events:none; transition:opacity .2s; padding:16px; }
+    .modal-overlay.open { opacity:1; pointer-events:all; }
+    .modal-box { background:var(--surface); border:1px solid var(--border); border-radius:20px; width:100%; max-width:480px; max-height:80vh; display:flex; flex-direction:column; box-shadow:0 24px 64px rgba(0,0,0,.6); transform:scale(.95); transition:transform .2s; }
+    .modal-overlay.open .modal-box { transform:scale(1); }
+    .modal-header { display:flex; align-items:center; justify-content:space-between; padding:20px 20px 0; }
+    .modal-title { font-size:1rem; font-weight:600; color:var(--text); }
+    .modal-close { background:var(--surface2); border:1px solid var(--border); border-radius:8px; color:var(--text-muted); width:30px; height:30px; cursor:pointer; font-size:1rem; display:flex; align-items:center; justify-content:center; transition:all .15s; }
+    .modal-close:hover { color:var(--text); background:var(--border); }
+    .modal-search-wrap { padding:14px 16px 10px; }
+    .modal-search { width:100%; background:var(--surface2); border:1px solid var(--border); border-radius:10px; color:var(--text); font-size:0.9rem; padding:10px 14px; outline:none; transition:border-color .15s; }
+    .modal-search:focus { border-color:var(--accent); }
+    .modal-search::placeholder { color:var(--text-dim); }
+    .modal-list { overflow-y:auto; padding:0 10px 14px; flex:1; }
+    .modal-list::-webkit-scrollbar { width:4px; }
+    .modal-list::-webkit-scrollbar-thumb { background:var(--border); border-radius:2px; }
+    .city-item { display:flex; align-items:center; gap:10px; padding:9px 8px; border-radius:10px; cursor:pointer; transition:background .12s; }
+    .city-item:hover { background:var(--surface2); }
+    .city-item.already { opacity:.35; pointer-events:none; }
+    .city-item-flag { font-size:1.4rem; flex-shrink:0; }
+    .city-item-info { flex:1; min-width:0; }
+    .city-item-name { font-size:0.88rem; font-weight:600; color:var(--text); }
+    .city-item-sub { font-size:0.7rem; color:var(--text-muted); margin-top:1px; }
+    .city-item-tz { font-size:0.7rem; color:var(--text-dim); flex-shrink:0; }
+    .city-item-add { color:var(--accent); font-size:1.2rem; flex-shrink:0; font-weight:600; }
+    .city-item.already .city-item-add { color:var(--success); }
+    .modal-empty { text-align:center; padding:32px 16px; color:var(--text-dim); font-size:0.85rem; }
 
-    /* mode toggle */
-    .mode-toggle {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      margin-top: 20px;
-      padding-top: 20px;
-      border-top: 1px solid var(--border);
-    }
-    .mode-toggle label { font-size: 0.85rem; color: var(--text-muted); cursor: pointer; }
-    .toggle-btn {
-      position: relative;
-      width: 40px; height: 22px;
-      background: var(--border);
-      border-radius: 11px;
-      border: none;
-      cursor: pointer;
-      transition: background .2s;
-    }
-    .toggle-btn.active { background: var(--accent); }
-    .toggle-btn::after {
-      content: '';
-      position: absolute;
-      top: 3px; left: 3px;
-      width: 16px; height: 16px;
-      border-radius: 50%;
-      background: #fff;
-      transition: transform .2s;
-    }
-    .toggle-btn.active::after { transform: translateX(18px); }
+    /* Footer */
+    footer { text-align:center; margin-top:56px; color:var(--text-dim); font-size:0.78rem; }
 
-    /* ── Grid ────────────────────────────────── */
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-      gap: 20px;
-      max-width: 1100px;
-      margin: 0 auto;
-    }
-
-    /* ── City card ───────────────────────────── */
-    .card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 24px;
-      box-shadow: var(--shadow);
-      transition: transform .2s, border-color .2s;
-      position: relative;
-      overflow: hidden;
-    }
-    .card::before {
-      content: '';
-      position: absolute;
-      top: 0; left: 0; right: 0;
-      height: 3px;
-      background: var(--card-accent, var(--accent));
-      border-radius: var(--radius) var(--radius) 0 0;
-    }
-    .card:hover {
-      transform: translateY(-3px);
-      border-color: var(--card-accent, var(--accent));
-    }
-
-    .card-top {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      margin-bottom: 16px;
-    }
-    .city-info {}
-    .city-flag { font-size: 1.6rem; line-height: 1; margin-bottom: 4px; }
-    .city-name { font-size: 1rem; font-weight: 600; color: var(--text); }
-    .city-tz   { font-size: 0.75rem; color: var(--text-muted); margin-top: 2px; }
-
-    .copy-btn {
-      background: var(--surface2);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      color: var(--text-muted);
-      font-size: 0.72rem;
-      padding: 5px 10px;
-      cursor: pointer;
-      transition: all .15s;
-      white-space: nowrap;
-    }
-    .copy-btn:hover   { background: var(--border); color: var(--text); }
-    .copy-btn.copied  { background: rgba(74,222,128,.15); border-color: var(--success); color: var(--success); }
-
-    .card-time {
-      font-size: 2.6rem;
-      font-weight: 800;
-      font-variant-numeric: tabular-nums;
-      line-height: 1;
-      letter-spacing: -1px;
-      color: var(--text);
-    }
-    .card-time .ampm {
-      font-size: 1rem;
-      font-weight: 500;
-      color: var(--text-muted);
-      margin-left: 4px;
-      letter-spacing: 0;
-    }
-
-    .card-date {
-      margin-top: 8px;
-      font-size: 0.8rem;
-      color: var(--text-muted);
-    }
-
-    .card-offset {
-      display: inline-block;
-      margin-top: 12px;
-      font-size: 0.72rem;
-      color: var(--text-dim);
-      background: var(--surface2);
-      border-radius: 6px;
-      padding: 3px 8px;
-    }
-
-    /* day indicator */
-    .day-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-      margin-left: 8px;
-      font-size: 0.65rem;
-      padding: 2px 7px;
-      border-radius: 20px;
-      vertical-align: middle;
-    }
-    .day-badge.next { background: rgba(108,138,255,.15); color: var(--accent); }
-    .day-badge.prev { background: rgba(167,139,250,.15); color: var(--accent2); }
-
-    /* ── Footer ──────────────────────────────── */
-    footer {
-      text-align: center;
-      margin-top: 56px;
-      color: var(--text-dim);
-      font-size: 0.78rem;
-    }
-
-    @media (max-width: 600px) {
-      body { padding: 20px 10px 48px; }
-      .header { margin-bottom: 24px; }
-      .live-bar { margin-bottom: 20px; gap: 8px; }
-      .slider-section { padding: 16px 14px; margin-bottom: 24px; }
-      .slider-value { font-size: 1.3rem; }
-      .grid {
-        grid-template-columns: repeat(2, 1fr);
-        gap: 10px;
-      }
-      .card { padding: 12px 12px 10px; border-radius: 12px; }
-      .card-top { margin-bottom: 8px; }
-      .city-flag { font-size: 1.2rem; margin-bottom: 2px; }
-      .city-name { font-size: 0.82rem; }
-      .city-tz   { font-size: 0.68rem; }
-      .copy-btn  { font-size: 0.65rem; padding: 3px 7px; border-radius: 6px; }
-      .card-time { font-size: 1.6rem; letter-spacing: -0.5px; }
-      .card-time .ampm { font-size: 0.78rem; }
-      .card-date { font-size: 0.68rem; margin-top: 4px; }
-      .card-offset { font-size: 0.65rem; padding: 2px 6px; margin-top: 6px; }
-      .day-badge { font-size: 0.6rem; padding: 1px 5px; }
+    /* Mobile */
+    @media (max-width:600px) {
+      body { padding:20px 10px 48px; }
+      .header { margin-bottom:24px; }
+      .live-bar { margin-bottom:20px; gap:8px; }
+      .slider-section { padding:16px 14px; margin-bottom:24px; }
+      .slider-value { font-size:1.3rem; }
+      .grid { grid-template-columns:repeat(2,1fr); gap:10px; }
+      .card { padding:12px 12px 10px; border-radius:12px; }
+      .card-top { margin-bottom:8px; }
+      .city-flag { font-size:1.2rem; margin-bottom:2px; }
+      .city-name { font-size:0.82rem; }
+      .city-tz { font-size:0.68rem; }
+      .copy-btn { font-size:0.62rem; padding:3px 6px; border-radius:6px; }
+      .delete-btn { width:22px; height:22px; font-size:0.7rem; }
+      .drag-handle { font-size:0.9rem; }
+      .card-time { font-size:1.6rem; letter-spacing:-0.5px; }
+      .card-time .ampm { font-size:0.78rem; }
+      .card-date { font-size:0.68rem; margin-top:4px; }
+      .card-offset { font-size:0.65rem; padding:2px 6px; margin-top:6px; }
+      .day-badge { font-size:0.6rem; padding:1px 5px; }
     }
   </style>
 </head>
@@ -337,7 +144,6 @@
   <p>拖动滑块，即时查看全球各城市时间</p>
 </div>
 
-<!-- live clock -->
 <div class="live-bar">
   <span class="live-dot"></span>
   <span class="live-date" id="liveDate"></span>
@@ -345,7 +151,6 @@
   <span class="live-clock" id="liveClock"></span>
 </div>
 
-<!-- slider -->
 <div class="slider-section">
   <div class="slider-header">
     <div>
@@ -366,225 +171,426 @@
   </div>
 </div>
 
-<!-- city grid -->
 <div class="grid" id="cityGrid"></div>
+
+<div class="add-btn-wrap">
+  <button class="add-btn" id="addBtn">＋ 添加城市 / 区域</button>
+</div>
+
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal-box">
+    <div class="modal-header">
+      <span class="modal-title">🔍 添加城市</span>
+      <button class="modal-close" id="modalClose">✕</button>
+    </div>
+    <div class="modal-search-wrap">
+      <input class="modal-search" id="modalSearch" placeholder="搜索城市、国家（支持中英文模糊搜索）…" autocomplete="off" />
+    </div>
+    <div class="modal-list" id="modalList"></div>
+  </div>
+</div>
 
 <footer>基于原生 JavaScript · 无外部依赖 · 数据来源于 IANA 时区数据库</footer>
 
 <script>
-  // ── 城市配置 ───────────────────────────────────────────────────────────────
-  const CITIES = [
-    { id:'beijing',   name:'北京',      flag:'🇨🇳', tz:'Asia/Shanghai',        accent:'#6c8aff' },
-    { id:'tokyo',     name:'东京',      flag:'🇯🇵', tz:'Asia/Tokyo',           accent:'#f87171' },
-    { id:'london',    name:'伦敦',      flag:'🇬🇧', tz:'Europe/London',        accent:'#facc15' },
-    { id:'newyork',   name:'纽约',      flag:'🇺🇸', tz:'America/New_York',     accent:'#4ade80' },
-    { id:'mexico',    name:'墨西哥城',  flag:'🇲🇽', tz:'America/Mexico_City',  accent:'#fb923c' },
-    { id:'saopaulo',  name:'圣保罗',    flag:'🇧🇷', tz:'America/Sao_Paulo',    accent:'#a78bfa' },
-    { id:'toronto',   name:'多伦多',    flag:'🇨🇦', tz:'America/Toronto',      accent:'#f43f5e' },
-    { id:'argentina', name:'布宜诺斯艾利斯', flag:'🇦🇷', tz:'America/Argentina/Buenos_Aires', accent:'#22d3ee' },
-    { id:'sydney',    name:'悉尼',      flag:'🇦🇺', tz:'Australia/Sydney',     accent:'#fbbf24' },
-    { id:'cairo',     name:'开罗',      flag:'🇪🇬', tz:'Africa/Cairo',         accent:'#34d399' },
-  ];
+// ── 全球城市数据库 ────────────────────────────────────────────────────────────
+const ALL_CITIES = [
+  // Asia
+  {id:'beijing',    name:'北京',          nameEn:'Beijing',         country:'中国',         flag:'🇨🇳', tz:'Asia/Shanghai',                   accent:'#6c8aff'},
+  {id:'shanghai',   name:'上海',          nameEn:'Shanghai',        country:'中国',         flag:'🇨🇳', tz:'Asia/Shanghai',                   accent:'#818cf8'},
+  {id:'chongqing',  name:'重庆',          nameEn:'Chongqing',       country:'中国',         flag:'🇨🇳', tz:'Asia/Shanghai',                   accent:'#a78bfa'},
+  {id:'guangzhou',  name:'广州',          nameEn:'Guangzhou',       country:'中国',         flag:'🇨🇳', tz:'Asia/Shanghai',                   accent:'#c4b5fd'},
+  {id:'shenzhen',   name:'深圳',          nameEn:'Shenzhen',        country:'中国',         flag:'🇨🇳', tz:'Asia/Shanghai',                   accent:'#7c3aed'},
+  {id:'hongkong',   name:'香港',          nameEn:'Hong Kong',       country:'中国香港',     flag:'🇭🇰', tz:'Asia/Hong_Kong',                  accent:'#fb7185'},
+  {id:'taipei',     name:'台北',          nameEn:'Taipei',          country:'中国台湾',     flag:'🇹🇼', tz:'Asia/Taipei',                     accent:'#38bdf8'},
+  {id:'macau',      name:'澳门',          nameEn:'Macau',           country:'中国澳门',     flag:'🇲🇴', tz:'Asia/Macau',                      accent:'#67e8f9'},
+  {id:'tokyo',      name:'东京',          nameEn:'Tokyo',           country:'日本',         flag:'🇯🇵', tz:'Asia/Tokyo',                      accent:'#f87171'},
+  {id:'osaka',      name:'大阪',          nameEn:'Osaka',           country:'日本',         flag:'🇯🇵', tz:'Asia/Tokyo',                      accent:'#fca5a5'},
+  {id:'sapporo',    name:'札幌',          nameEn:'Sapporo',         country:'日本',         flag:'🇯🇵', tz:'Asia/Tokyo',                      accent:'#fecaca'},
+  {id:'seoul',      name:'首尔',          nameEn:'Seoul',           country:'韩国',         flag:'🇰🇷', tz:'Asia/Seoul',                      accent:'#60a5fa'},
+  {id:'busan',      name:'釜山',          nameEn:'Busan',           country:'韩国',         flag:'🇰🇷', tz:'Asia/Seoul',                      accent:'#93c5fd'},
+  {id:'singapore',  name:'新加坡',        nameEn:'Singapore',       country:'新加坡',       flag:'🇸🇬', tz:'Asia/Singapore',                  accent:'#f472b6'},
+  {id:'bangkok',    name:'曼谷',          nameEn:'Bangkok',         country:'泰国',         flag:'🇹🇭', tz:'Asia/Bangkok',                    accent:'#4ade80'},
+  {id:'jakarta',    name:'雅加达',        nameEn:'Jakarta',         country:'印度尼西亚',   flag:'🇮🇩', tz:'Asia/Jakarta',                    accent:'#fb923c'},
+  {id:'bali',       name:'巴厘岛',        nameEn:'Bali',            country:'印度尼西亚',   flag:'🇮🇩', tz:'Asia/Makassar',                   accent:'#fdba74'},
+  {id:'manila',     name:'马尼拉',        nameEn:'Manila',          country:'菲律宾',       flag:'🇵🇭', tz:'Asia/Manila',                     accent:'#06b6d4'},
+  {id:'kualalumpur',name:'吉隆坡',        nameEn:'Kuala Lumpur',    country:'马来西亚',     flag:'🇲🇾', tz:'Asia/Kuala_Lumpur',               accent:'#14b8a6'},
+  {id:'yangon',     name:'仰光',          nameEn:'Yangon',          country:'缅甸',         flag:'🇲🇲', tz:'Asia/Rangoon',                    accent:'#84cc16'},
+  {id:'hanoi',      name:'河内',          nameEn:'Hanoi',           country:'越南',         flag:'🇻🇳', tz:'Asia/Ho_Chi_Minh',                accent:'#a3e635'},
+  {id:'hochiminh',  name:'胡志明市',      nameEn:'Ho Chi Minh City',country:'越南',         flag:'🇻🇳', tz:'Asia/Ho_Chi_Minh',                accent:'#bef264'},
+  {id:'phnompenh',  name:'金边',          nameEn:'Phnom Penh',      country:'柬埔寨',       flag:'🇰🇭', tz:'Asia/Phnom_Penh',                 accent:'#4ade80'},
+  {id:'vientiane',  name:'万象',          nameEn:'Vientiane',       country:'老挝',         flag:'🇱🇦', tz:'Asia/Vientiane',                  accent:'#86efac'},
+  {id:'mumbai',     name:'孟买',          nameEn:'Mumbai',          country:'印度',         flag:'🇮🇳', tz:'Asia/Kolkata',                    accent:'#f97316'},
+  {id:'delhi',      name:'新德里',        nameEn:'New Delhi',       country:'印度',         flag:'🇮🇳', tz:'Asia/Kolkata',                    accent:'#fb923c'},
+  {id:'kolkata',    name:'加尔各答',      nameEn:'Kolkata',         country:'印度',         flag:'🇮🇳', tz:'Asia/Kolkata',                    accent:'#fbbf24'},
+  {id:'bangalore',  name:'班加罗尔',      nameEn:'Bangalore',       country:'印度',         flag:'🇮🇳', tz:'Asia/Kolkata',                    accent:'#fcd34d'},
+  {id:'dhaka',      name:'达卡',          nameEn:'Dhaka',           country:'孟加拉国',     flag:'🇧🇩', tz:'Asia/Dhaka',                      accent:'#22c55e'},
+  {id:'karachi',    name:'卡拉奇',        nameEn:'Karachi',         country:'巴基斯坦',     flag:'🇵🇰', tz:'Asia/Karachi',                    accent:'#65a30d'},
+  {id:'islamabad',  name:'伊斯兰堡',      nameEn:'Islamabad',       country:'巴基斯坦',     flag:'🇵🇰', tz:'Asia/Karachi',                    accent:'#16a34a'},
+  {id:'kathmandu',  name:'加德满都',      nameEn:'Kathmandu',       country:'尼泊尔',       flag:'🇳🇵', tz:'Asia/Kathmandu',                  accent:'#ef4444'},
+  {id:'colombo',    name:'科伦坡',        nameEn:'Colombo',         country:'斯里兰卡',     flag:'🇱🇰', tz:'Asia/Colombo',                    accent:'#a3e635'},
+  {id:'tashkent',   name:'塔什干',        nameEn:'Tashkent',        country:'乌兹别克斯坦', flag:'🇺🇿', tz:'Asia/Tashkent',                   accent:'#8b5cf6'},
+  {id:'almaty',     name:'阿拉木图',      nameEn:'Almaty',          country:'哈萨克斯坦',   flag:'🇰🇿', tz:'Asia/Almaty',                     accent:'#a78bfa'},
+  {id:'ulaanbaatar',name:'乌兰巴托',      nameEn:'Ulaanbaatar',     country:'蒙古',         flag:'🇲🇳', tz:'Asia/Ulaanbaatar',                accent:'#c084fc'},
+  {id:'tehran',     name:'德黑兰',        nameEn:'Tehran',          country:'伊朗',         flag:'🇮🇷', tz:'Asia/Tehran',                     accent:'#22d3ee'},
+  {id:'dubai',      name:'迪拜',          nameEn:'Dubai',           country:'阿联酋',       flag:'🇦🇪', tz:'Asia/Dubai',                      accent:'#fbbf24'},
+  {id:'abudhabi',   name:'阿布扎比',      nameEn:'Abu Dhabi',       country:'阿联酋',       flag:'🇦🇪', tz:'Asia/Dubai',                      accent:'#fde68a'},
+  {id:'riyadh',     name:'利雅得',        nameEn:'Riyadh',          country:'沙特阿拉伯',   flag:'🇸🇦', tz:'Asia/Riyadh',                     accent:'#10b981'},
+  {id:'jeddah',     name:'吉达',          nameEn:'Jeddah',          country:'沙特阿拉伯',   flag:'🇸🇦', tz:'Asia/Riyadh',                     accent:'#34d399'},
+  {id:'baghdad',    name:'巴格达',        nameEn:'Baghdad',         country:'伊拉克',       flag:'🇮🇶', tz:'Asia/Baghdad',                    accent:'#6ee7b7'},
+  {id:'kuwait',     name:'科威特城',      nameEn:'Kuwait City',     country:'科威特',       flag:'🇰🇼', tz:'Asia/Kuwait',                     accent:'#2dd4bf'},
+  {id:'doha',       name:'多哈',          nameEn:'Doha',            country:'卡塔尔',       flag:'🇶🇦', tz:'Asia/Qatar',                      accent:'#818cf8'},
+  {id:'manama',     name:'麦纳麦',        nameEn:'Manama',          country:'巴林',         flag:'🇧🇭', tz:'Asia/Bahrain',                    accent:'#a5f3fc'},
+  {id:'muscat',     name:'马斯喀特',      nameEn:'Muscat',          country:'阿曼',         flag:'🇴🇲', tz:'Asia/Muscat',                     accent:'#67e8f9'},
+  {id:'jerusalem',  name:'耶路撒冷',      nameEn:'Jerusalem',       country:'以色列',       flag:'🇮🇱', tz:'Asia/Jerusalem',                  accent:'#3b82f6'},
+  {id:'telaviv',    name:'特拉维夫',      nameEn:'Tel Aviv',        country:'以色列',       flag:'🇮🇱', tz:'Asia/Jerusalem',                  accent:'#60a5fa'},
+  {id:'istanbul',   name:'伊斯坦布尔',    nameEn:'Istanbul',        country:'土耳其',       flag:'🇹🇷', tz:'Europe/Istanbul',                 accent:'#f43f5e'},
+  {id:'ankara',     name:'安卡拉',        nameEn:'Ankara',          country:'土耳其',       flag:'🇹🇷', tz:'Europe/Istanbul',                 accent:'#fb7185'},
+  {id:'baku',       name:'巴库',          nameEn:'Baku',            country:'阿塞拜疆',     flag:'🇦🇿', tz:'Asia/Baku',                       accent:'#38bdf8'},
+  {id:'yerevan',    name:'埃里温',        nameEn:'Yerevan',         country:'亚美尼亚',     flag:'🇦🇲', tz:'Asia/Yerevan',                    accent:'#f87171'},
+  {id:'tbilisi',    name:'第比利斯',      nameEn:'Tbilisi',         country:'格鲁吉亚',     flag:'🇬🇪', tz:'Asia/Tbilisi',                    accent:'#fb923c'},
+  {id:'yangon2',    name:'内比都',        nameEn:'Naypyidaw',       country:'缅甸',         flag:'🇲🇲', tz:'Asia/Rangoon',                    accent:'#6ee7b7'},
+  // Europe
+  {id:'london',     name:'伦敦',          nameEn:'London',          country:'英国',         flag:'🇬🇧', tz:'Europe/London',                   accent:'#facc15'},
+  {id:'edinburgh',  name:'爱丁堡',        nameEn:'Edinburgh',       country:'英国',         flag:'🇬🇧', tz:'Europe/London',                   accent:'#fde047'},
+  {id:'paris',      name:'巴黎',          nameEn:'Paris',           country:'法国',         flag:'🇫🇷', tz:'Europe/Paris',                    accent:'#e879f9'},
+  {id:'lyon',       name:'里昂',          nameEn:'Lyon',            country:'法国',         flag:'🇫🇷', tz:'Europe/Paris',                    accent:'#d946ef'},
+  {id:'berlin',     name:'柏林',          nameEn:'Berlin',          country:'德国',         flag:'🇩🇪', tz:'Europe/Berlin',                   accent:'#94a3b8'},
+  {id:'munich',     name:'慕尼黑',        nameEn:'Munich',          country:'德国',         flag:'🇩🇪', tz:'Europe/Berlin',                   accent:'#cbd5e1'},
+  {id:'hamburg',    name:'汉堡',          nameEn:'Hamburg',         country:'德国',         flag:'🇩🇪', tz:'Europe/Berlin',                   accent:'#b0bec5'},
+  {id:'rome',       name:'罗马',          nameEn:'Rome',            country:'意大利',       flag:'🇮🇹', tz:'Europe/Rome',                     accent:'#22d3ee'},
+  {id:'milan',      name:'米兰',          nameEn:'Milan',           country:'意大利',       flag:'🇮🇹', tz:'Europe/Rome',                     accent:'#67e8f9'},
+  {id:'madrid',     name:'马德里',        nameEn:'Madrid',          country:'西班牙',       flag:'🇪🇸', tz:'Europe/Madrid',                   accent:'#f59e0b'},
+  {id:'barcelona',  name:'巴塞罗那',      nameEn:'Barcelona',       country:'西班牙',       flag:'🇪🇸', tz:'Europe/Madrid',                   accent:'#fcd34d'},
+  {id:'amsterdam',  name:'阿姆斯特丹',    nameEn:'Amsterdam',       country:'荷兰',         flag:'🇳🇱', tz:'Europe/Amsterdam',                accent:'#f97316'},
+  {id:'brussels',   name:'布鲁塞尔',      nameEn:'Brussels',        country:'比利时',       flag:'🇧🇪', tz:'Europe/Brussels',                 accent:'#fde047'},
+  {id:'vienna',     name:'维也纳',        nameEn:'Vienna',          country:'奥地利',       flag:'🇦🇹', tz:'Europe/Vienna',                   accent:'#c084fc'},
+  {id:'zurich',     name:'苏黎世',        nameEn:'Zurich',          country:'瑞士',         flag:'🇨🇭', tz:'Europe/Zurich',                   accent:'#f43f5e'},
+  {id:'geneva',     name:'日内瓦',        nameEn:'Geneva',          country:'瑞士',         flag:'🇨🇭', tz:'Europe/Zurich',                   accent:'#fb7185'},
+  {id:'stockholm',  name:'斯德哥尔摩',    nameEn:'Stockholm',       country:'瑞典',         flag:'🇸🇪', tz:'Europe/Stockholm',                accent:'#fbbf24'},
+  {id:'oslo',       name:'奥斯陆',        nameEn:'Oslo',            country:'挪威',         flag:'🇳🇴', tz:'Europe/Oslo',                     accent:'#ef4444'},
+  {id:'copenhagen', name:'哥本哈根',      nameEn:'Copenhagen',      country:'丹麦',         flag:'🇩🇰', tz:'Europe/Copenhagen',               accent:'#f43f5e'},
+  {id:'helsinki',   name:'赫尔辛基',      nameEn:'Helsinki',        country:'芬兰',         flag:'🇫🇮', tz:'Europe/Helsinki',                 accent:'#38bdf8'},
+  {id:'warsaw',     name:'华沙',          nameEn:'Warsaw',          country:'波兰',         flag:'🇵🇱', tz:'Europe/Warsaw',                   accent:'#f87171'},
+  {id:'krakow',     name:'克拉科夫',      nameEn:'Krakow',          country:'波兰',         flag:'🇵🇱', tz:'Europe/Warsaw',                   accent:'#fca5a5'},
+  {id:'athens',     name:'雅典',          nameEn:'Athens',          country:'希腊',         flag:'🇬🇷', tz:'Europe/Athens',                   accent:'#38bdf8'},
+  {id:'lisbon',     name:'里斯本',        nameEn:'Lisbon',          country:'葡萄牙',       flag:'🇵🇹', tz:'Europe/Lisbon',                   accent:'#4ade80'},
+  {id:'moscow',     name:'莫斯科',        nameEn:'Moscow',          country:'俄罗斯',       flag:'🇷🇺', tz:'Europe/Moscow',                   accent:'#ef4444'},
+  {id:'stpetersburg',name:'圣彼得堡',     nameEn:'St. Petersburg',  country:'俄罗斯',       flag:'🇷🇺', tz:'Europe/Moscow',                   accent:'#fca5a5'},
+  {id:'prague',     name:'布拉格',        nameEn:'Prague',          country:'捷克',         flag:'🇨🇿', tz:'Europe/Prague',                   accent:'#60a5fa'},
+  {id:'budapest',   name:'布达佩斯',      nameEn:'Budapest',        country:'匈牙利',       flag:'🇭🇺', tz:'Europe/Budapest',                 accent:'#fb923c'},
+  {id:'bucharest',  name:'布加勒斯特',    nameEn:'Bucharest',       country:'罗马尼亚',     flag:'🇷🇴', tz:'Europe/Bucharest',                accent:'#fbbf24'},
+  {id:'kyiv',       name:'基辅',          nameEn:'Kyiv',            country:'乌克兰',       flag:'🇺🇦', tz:'Europe/Kiev',                     accent:'#fde047'},
+  {id:'sofia',      name:'索非亚',        nameEn:'Sofia',           country:'保加利亚',     flag:'🇧🇬', tz:'Europe/Sofia',                    accent:'#4ade80'},
+  {id:'belgrade',   name:'贝尔格莱德',    nameEn:'Belgrade',        country:'塞尔维亚',     flag:'🇷🇸', tz:'Europe/Belgrade',                 accent:'#f87171'},
+  {id:'zagreb',     name:'萨格勒布',      nameEn:'Zagreb',          country:'克罗地亚',     flag:'🇭🇷', tz:'Europe/Zagreb',                   accent:'#fb923c'},
+  {id:'dublin',     name:'都柏林',        nameEn:'Dublin',          country:'爱尔兰',       flag:'🇮🇪', tz:'Europe/Dublin',                   accent:'#4ade80'},
+  {id:'reykjavik',  name:'雷克雅未克',    nameEn:'Reykjavik',       country:'冰岛',         flag:'🇮🇸', tz:'Atlantic/Reykjavik',              accent:'#67e8f9'},
+  // Americas
+  {id:'newyork',    name:'纽约',          nameEn:'New York',        country:'美国',         flag:'🇺🇸', tz:'America/New_York',                accent:'#4ade80'},
+  {id:'losangeles', name:'洛杉矶',        nameEn:'Los Angeles',     country:'美国',         flag:'🇺🇸', tz:'America/Los_Angeles',             accent:'#60a5fa'},
+  {id:'chicago',    name:'芝加哥',        nameEn:'Chicago',         country:'美国',         flag:'🇺🇸', tz:'America/Chicago',                 accent:'#34d399'},
+  {id:'houston',    name:'休斯顿',        nameEn:'Houston',         country:'美国',         flag:'🇺🇸', tz:'America/Chicago',                 accent:'#a78bfa'},
+  {id:'phoenix',    name:'菲尼克斯',      nameEn:'Phoenix',         country:'美国',         flag:'🇺🇸', tz:'America/Phoenix',                 accent:'#f43f5e'},
+  {id:'denver',     name:'丹佛',          nameEn:'Denver',          country:'美国',         flag:'🇺🇸', tz:'America/Denver',                  accent:'#fb923c'},
+  {id:'seattle',    name:'西雅图',        nameEn:'Seattle',         country:'美国',         flag:'🇺🇸', tz:'America/Los_Angeles',             accent:'#22d3ee'},
+  {id:'miami',      name:'迈阿密',        nameEn:'Miami',           country:'美国',         flag:'🇺🇸', tz:'America/New_York',                accent:'#f472b6'},
+  {id:'boston',     name:'波士顿',        nameEn:'Boston',          country:'美国',         flag:'🇺🇸', tz:'America/New_York',                accent:'#818cf8'},
+  {id:'sanfrancisco',name:'旧金山',       nameEn:'San Francisco',   country:'美国',         flag:'🇺🇸', tz:'America/Los_Angeles',             accent:'#f59e0b'},
+  {id:'lasvegas',   name:'拉斯维加斯',    nameEn:'Las Vegas',       country:'美国',         flag:'🇺🇸', tz:'America/Los_Angeles',             accent:'#facc15'},
+  {id:'washington', name:'华盛顿',        nameEn:'Washington D.C.', country:'美国',         flag:'🇺🇸', tz:'America/New_York',                accent:'#38bdf8'},
+  {id:'atlanta',    name:'亚特兰大',      nameEn:'Atlanta',         country:'美国',         flag:'🇺🇸', tz:'America/New_York',                accent:'#f97316'},
+  {id:'honolulu',   name:'檀香山',        nameEn:'Honolulu',        country:'美国夏威夷',   flag:'🇺🇸', tz:'Pacific/Honolulu',                accent:'#f472b6'},
+  {id:'anchorage',  name:'安克雷奇',      nameEn:'Anchorage',       country:'美国阿拉斯加', flag:'🇺🇸', tz:'America/Anchorage',               accent:'#93c5fd'},
+  {id:'toronto',    name:'多伦多',        nameEn:'Toronto',         country:'加拿大',       flag:'🇨🇦', tz:'America/Toronto',                 accent:'#f43f5e'},
+  {id:'vancouver',  name:'温哥华',        nameEn:'Vancouver',       country:'加拿大',       flag:'🇨🇦', tz:'America/Vancouver',               accent:'#22d3ee'},
+  {id:'montreal',   name:'蒙特利尔',      nameEn:'Montreal',        country:'加拿大',       flag:'🇨🇦', tz:'America/Toronto',                 accent:'#818cf8'},
+  {id:'calgary',    name:'卡尔加里',      nameEn:'Calgary',         country:'加拿大',       flag:'🇨🇦', tz:'America/Edmonton',                accent:'#a78bfa'},
+  {id:'ottawa',     name:'渥太华',        nameEn:'Ottawa',          country:'加拿大',       flag:'🇨🇦', tz:'America/Toronto',                 accent:'#fb7185'},
+  {id:'mexico',     name:'墨西哥城',      nameEn:'Mexico City',     country:'墨西哥',       flag:'🇲🇽', tz:'America/Mexico_City',             accent:'#fb923c'},
+  {id:'guadalajara',name:'瓜达拉哈拉',    nameEn:'Guadalajara',     country:'墨西哥',       flag:'🇲🇽', tz:'America/Mexico_City',             accent:'#fdba74'},
+  {id:'saopaulo',   name:'圣保罗',        nameEn:'São Paulo',       country:'巴西',         flag:'🇧🇷', tz:'America/Sao_Paulo',               accent:'#a78bfa'},
+  {id:'riojaneiro', name:'里约热内卢',    nameEn:'Rio de Janeiro',  country:'巴西',         flag:'🇧🇷', tz:'America/Sao_Paulo',               accent:'#10b981'},
+  {id:'brasilia',   name:'巴西利亚',      nameEn:'Brasília',        country:'巴西',         flag:'🇧🇷', tz:'America/Sao_Paulo',               accent:'#4ade80'},
+  {id:'argentina',  name:'布宜诺斯艾利斯',nameEn:'Buenos Aires',    country:'阿根廷',       flag:'🇦🇷', tz:'America/Argentina/Buenos_Aires',  accent:'#22d3ee'},
+  {id:'cordoba',    name:'科尔多瓦',      nameEn:'Córdoba',         country:'阿根廷',       flag:'🇦🇷', tz:'America/Argentina/Cordoba',       accent:'#67e8f9'},
+  {id:'santiago',   name:'圣地亚哥',      nameEn:'Santiago',        country:'智利',         flag:'🇨🇱', tz:'America/Santiago',                accent:'#f59e0b'},
+  {id:'lima',       name:'利马',          nameEn:'Lima',            country:'秘鲁',         flag:'🇵🇪', tz:'America/Lima',                    accent:'#ef4444'},
+  {id:'bogota',     name:'波哥大',        nameEn:'Bogotá',          country:'哥伦比亚',     flag:'🇨🇴', tz:'America/Bogota',                  accent:'#fbbf24'},
+  {id:'caracas',    name:'卡拉卡斯',      nameEn:'Caracas',         country:'委内瑞拉',     flag:'🇻🇪', tz:'America/Caracas',                 accent:'#f43f5e'},
+  {id:'havana',     name:'哈瓦那',        nameEn:'Havana',          country:'古巴',         flag:'🇨🇺', tz:'America/Havana',                  accent:'#34d399'},
+  {id:'panama',     name:'巴拿马城',      nameEn:'Panama City',     country:'巴拿马',       flag:'🇵🇦', tz:'America/Panama',                  accent:'#38bdf8'},
+  {id:'sanjose',    name:'圣何塞',        nameEn:'San José',        country:'哥斯达黎加',   flag:'🇨🇷', tz:'America/Costa_Rica',              accent:'#4ade80'},
+  {id:'quito',      name:'基多',          nameEn:'Quito',           country:'厄瓜多尔',     flag:'🇪🇨', tz:'America/Guayaquil',               accent:'#fbbf24'},
+  {id:'lapaz',      name:'拉巴斯',        nameEn:'La Paz',          country:'玻利维亚',     flag:'🇧🇴', tz:'America/La_Paz',                  accent:'#f97316'},
+  {id:'asuncion',   name:'亚松森',        nameEn:'Asunción',        country:'巴拉圭',       flag:'🇵🇾', tz:'America/Asuncion',                accent:'#a78bfa'},
+  {id:'montevideo', name:'蒙得维的亚',    nameEn:'Montevideo',      country:'乌拉圭',       flag:'🇺🇾', tz:'America/Montevideo',              accent:'#818cf8'},
+  // Africa
+  {id:'cairo',      name:'开罗',          nameEn:'Cairo',           country:'埃及',         flag:'🇪🇬', tz:'Africa/Cairo',                    accent:'#34d399'},
+  {id:'lagos',      name:'拉各斯',        nameEn:'Lagos',           country:'尼日利亚',     flag:'🇳🇬', tz:'Africa/Lagos',                    accent:'#4ade80'},
+  {id:'abuja',      name:'阿布贾',        nameEn:'Abuja',           country:'尼日利亚',     flag:'🇳🇬', tz:'Africa/Lagos',                    accent:'#86efac'},
+  {id:'nairobi',    name:'内罗毕',        nameEn:'Nairobi',         country:'肯尼亚',       flag:'🇰🇪', tz:'Africa/Nairobi',                  accent:'#f87171'},
+  {id:'johannesburg',name:'约翰内斯堡',   nameEn:'Johannesburg',    country:'南非',         flag:'🇿🇦', tz:'Africa/Johannesburg',             accent:'#22d3ee'},
+  {id:'capetown',   name:'开普敦',        nameEn:'Cape Town',       country:'南非',         flag:'🇿🇦', tz:'Africa/Johannesburg',             accent:'#67e8f9'},
+  {id:'casablanca', name:'卡萨布兰卡',    nameEn:'Casablanca',      country:'摩洛哥',       flag:'🇲🇦', tz:'Africa/Casablanca',               accent:'#fb923c'},
+  {id:'accra',      name:'阿克拉',        nameEn:'Accra',           country:'加纳',         flag:'🇬🇭', tz:'Africa/Accra',                    accent:'#fbbf24'},
+  {id:'addisababa', name:'亚的斯亚贝巴',  nameEn:'Addis Ababa',     country:'埃塞俄比亚',   flag:'🇪🇹', tz:'Africa/Addis_Ababa',              accent:'#84cc16'},
+  {id:'khartoum',   name:'喀土穆',        nameEn:'Khartoum',        country:'苏丹',         flag:'🇸🇩', tz:'Africa/Khartoum',                 accent:'#f59e0b'},
+  {id:'dakar',      name:'达喀尔',        nameEn:'Dakar',           country:'塞内加尔',     flag:'🇸🇳', tz:'Africa/Dakar',                    accent:'#60a5fa'},
+  {id:'tunis',      name:'突尼斯',        nameEn:'Tunis',           country:'突尼斯',       flag:'🇹🇳', tz:'Africa/Tunis',                    accent:'#f43f5e'},
+  {id:'algiers',    name:'阿尔及尔',      nameEn:'Algiers',         country:'阿尔及利亚',   flag:'🇩🇿', tz:'Africa/Algiers',                  accent:'#4ade80'},
+  {id:'tripoli',    name:'的黎波里',      nameEn:'Tripoli',         country:'利比亚',       flag:'🇱🇾', tz:'Africa/Tripoli',                  accent:'#22d3ee'},
+  {id:'luanda',     name:'罗安达',        nameEn:'Luanda',          country:'安哥拉',       flag:'🇦🇴', tz:'Africa/Luanda',                   accent:'#fb923c'},
+  {id:'kinshasa',   name:'金沙萨',        nameEn:'Kinshasa',        country:'刚果（金）',   flag:'🇨🇩', tz:'Africa/Kinshasa',                 accent:'#a78bfa'},
+  {id:'dar',        name:'达累斯萨拉姆',  nameEn:'Dar es Salaam',   country:'坦桑尼亚',     flag:'🇹🇿', tz:'Africa/Dar_es_Salaam',            accent:'#38bdf8'},
+  {id:'kampala',    name:'坎帕拉',        nameEn:'Kampala',         country:'乌干达',       flag:'🇺🇬', tz:'Africa/Kampala',                  accent:'#fbbf24'},
+  {id:'harare',     name:'哈拉雷',        nameEn:'Harare',          country:'津巴布韦',     flag:'🇿🇼', tz:'Africa/Harare',                   accent:'#f87171'},
+  {id:'maputo',     name:'马普托',        nameEn:'Maputo',          country:'莫桑比克',     flag:'🇲🇿', tz:'Africa/Maputo',                   accent:'#4ade80'},
+  {id:'antananarivo',name:'塔那那利佛',   nameEn:'Antananarivo',    country:'马达加斯加',   flag:'🇲🇬', tz:'Indian/Antananarivo',             accent:'#f97316'},
+  // Oceania
+  {id:'sydney',     name:'悉尼',          nameEn:'Sydney',          country:'澳大利亚',     flag:'🇦🇺', tz:'Australia/Sydney',                accent:'#fbbf24'},
+  {id:'melbourne',  name:'墨尔本',        nameEn:'Melbourne',       country:'澳大利亚',     flag:'🇦🇺', tz:'Australia/Melbourne',             accent:'#38bdf8'},
+  {id:'brisbane',   name:'布里斯班',      nameEn:'Brisbane',        country:'澳大利亚',     flag:'🇦🇺', tz:'Australia/Brisbane',              accent:'#4ade80'},
+  {id:'perth',      name:'珀斯',          nameEn:'Perth',           country:'澳大利亚',     flag:'🇦🇺', tz:'Australia/Perth',                 accent:'#a78bfa'},
+  {id:'adelaide',   name:'阿德莱德',      nameEn:'Adelaide',        country:'澳大利亚',     flag:'🇦🇺', tz:'Australia/Adelaide',              accent:'#f43f5e'},
+  {id:'darwin',     name:'达尔文',        nameEn:'Darwin',          country:'澳大利亚',     flag:'🇦🇺', tz:'Australia/Darwin',                accent:'#fb923c'},
+  {id:'auckland',   name:'奥克兰',        nameEn:'Auckland',        country:'新西兰',       flag:'🇳🇿', tz:'Pacific/Auckland',                accent:'#34d399'},
+  {id:'wellington', name:'惠灵顿',        nameEn:'Wellington',      country:'新西兰',       flag:'🇳🇿', tz:'Pacific/Auckland',                accent:'#22d3ee'},
+  {id:'suva',       name:'苏瓦',          nameEn:'Suva',            country:'斐济',         flag:'🇫🇯', tz:'Pacific/Fiji',                    accent:'#38bdf8'},
+  {id:'portmoresby',name:'莫尔兹比港',    nameEn:'Port Moresby',    country:'巴布亚新几内亚',flag:'🇵🇬', tz:'Pacific/Port_Moresby',           accent:'#fbbf24'},
+  {id:'noumea',     name:'努美阿',        nameEn:'Nouméa',          country:'新喀里多尼亚', flag:'🇳🇨', tz:'Pacific/Noumea',                  accent:'#67e8f9'},
+];
 
-  // ── State ──────────────────────────────────────────────────────────────────
-  let use12h = false;
-  let sliderMinutes = 720; // minutes since midnight, Beijing reference
-  let useSlider = false;   // false = live clock mode
+// ── 当前显示城市列表 ──────────────────────────────────────────────────────────
+let CITIES = ['beijing','tokyo','london','newyork','mexico','saopaulo','toronto','argentina','sydney','cairo']
+  .map(id => ALL_CITIES.find(c => c.id === id));
 
-  // ── Helpers ───────────────────────────────────────────────────────────────
-  function pad(n) { return String(n).padStart(2,'0'); }
+// ── State ─────────────────────────────────────────────────────────────────────
+let use12h = false, sliderMinutes = 720, useSlider = false;
 
-  // get Date object for a given IANA timezone at a specific Beijing minute-of-day
-  // We map "slider minutes" to a wall-clock time in Beijing, then derive others.
-  function getDateForCity(refBeijingMinutes, city) {
-    // Build a reference Date where Beijing local time == refBeijingMinutes
-    // Use today's date in Beijing
-    const now = new Date();
-    const beijingFormatter = new Intl.DateTimeFormat('en-CA', {
-      timeZone: 'Asia/Shanghai',
-      year:'numeric', month:'2-digit', day:'2-digit'
-    });
-    const beijingDateStr = beijingFormatter.format(now); // YYYY-MM-DD
-    const [y,m,d] = beijingDateStr.split('-').map(Number);
-    const h = Math.floor(refBeijingMinutes / 60) % 24;
-    const min = refBeijingMinutes % 60;
+// ── Helpers ───────────────────────────────────────────────────────────────────
+function pad(n) { return String(n).padStart(2,'0'); }
 
-    // Create UTC time from Beijing local: Beijing = UTC+8
-    // Build as if it's that local time in Beijing
-    const utcMs = Date.UTC(y, m-1, d, h, min, 0) - 8 * 3600000;
-    return new Date(utcMs);
-  }
+function getDateForCity(refMins) {
+  const now = new Date();
+  const bjStr = new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Shanghai',year:'numeric',month:'2-digit',day:'2-digit'}).format(now);
+  const [y,m,d] = bjStr.split('-').map(Number);
+  return new Date(Date.UTC(y,m-1,d,Math.floor(refMins/60)%24,refMins%60,0) - 8*3600000);
+}
 
-  function formatTime(date, tz, fmt12) {
-    const opts = { timeZone: tz, hour:'2-digit', minute:'2-digit', hour12: fmt12 };
-    return new Intl.DateTimeFormat('en-US', opts).format(date);
-  }
+function formatTime(date, tz, fmt12) {
+  return new Intl.DateTimeFormat('en-US',{timeZone:tz,hour:'2-digit',minute:'2-digit',hour12:fmt12}).format(date);
+}
+function formatDate(date, tz) {
+  return new Intl.DateTimeFormat('zh-CN',{timeZone:tz,month:'long',day:'numeric',weekday:'short'}).format(date);
+}
+function getTzOffset(tz) {
+  const parts = new Intl.DateTimeFormat('en-US',{timeZone:tz,timeZoneName:'shortOffset'}).formatToParts(new Date());
+  const p = parts.find(p=>p.type==='timeZoneName');
+  return p ? p.value.replace('GMT','UTC') : tz;
+}
 
-  function formatDate(date, tz) {
-    return new Intl.DateTimeFormat('zh-CN', {
-      timeZone: tz,
-      month:'long', day:'numeric', weekday:'short'
-    }).format(date);
-  }
-
-  function getTzOffset(tz) {
-    const now = new Date();
-    const parts = new Intl.DateTimeFormat('en-US', {
-      timeZone: tz, timeZoneName: 'shortOffset'
-    }).formatToParts(now);
-    const tzPart = parts.find(p => p.type === 'timeZoneName');
-    return tzPart ? tzPart.value.replace('GMT', 'UTC') : tz;
-  }
-
-  // ── Build cards ────────────────────────────────────────────────────────────
-  function buildCards() {
-    const grid = document.getElementById('cityGrid');
-    grid.innerHTML = '';
-    CITIES.forEach(city => {
-      const card = document.createElement('div');
-      card.className = 'card';
-      card.id = 'card-' + city.id;
-      card.style.setProperty('--card-accent', city.accent);
-      card.innerHTML = `
-        <div class="card-top">
-          <div class="city-info">
-            <div class="city-flag">${city.flag}</div>
-            <div class="city-name">${city.name}</div>
-            <div class="city-tz" id="tz-${city.id}">${getTzOffset(city.tz)}</div>
-          </div>
-          <button class="copy-btn" id="copy-${city.id}" title="复制时间">复制</button>
+// ── Build cards ───────────────────────────────────────────────────────────────
+function buildCards() {
+  const grid = document.getElementById('cityGrid');
+  grid.innerHTML = '';
+  CITIES.forEach((city, index) => {
+    if (!city) return;
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.id = 'card-' + city.id;
+    card.dataset.id = city.id;
+    card.dataset.index = index;
+    card.style.setProperty('--card-accent', city.accent);
+    card.innerHTML = `
+      <div class="card-top">
+        <div class="city-info">
+          <div class="city-flag">${city.flag}</div>
+          <div class="city-name">${city.name}</div>
+          <div class="city-tz">${getTzOffset(city.tz)}</div>
         </div>
-        <div class="card-time" id="time-${city.id}">--:--</div>
-        <div class="card-date" id="date-${city.id}">--</div>
-        <div class="card-offset" id="day-${city.id}"></div>
-      `;
-      grid.appendChild(card);
-
-      document.getElementById('copy-'+city.id).addEventListener('click', () => {
-        const timeEl = document.getElementById('time-'+city.id);
-        const text = timeEl.textContent.trim();
-        navigator.clipboard.writeText(text).then(() => {
-          const btn = document.getElementById('copy-'+city.id);
-          btn.textContent = '已复制 ✓';
-          btn.classList.add('copied');
-          setTimeout(() => { btn.textContent = '复制'; btn.classList.remove('copied'); }, 1800);
-        });
+        <div class="card-actions">
+          <button class="copy-btn" title="复制时间">复制</button>
+          <button class="delete-btn" title="移除">✕</button>
+          <span class="drag-handle" title="拖动排序">⠿</span>
+        </div>
+      </div>
+      <div class="card-time" id="time-${city.id}">--:--</div>
+      <div class="card-date" id="date-${city.id}">--</div>
+      <div class="card-offset" id="day-${city.id}"></div>
+    `;
+    grid.appendChild(card);
+    card.querySelector('.copy-btn').addEventListener('click', () => {
+      const text = document.getElementById('time-'+city.id).textContent.trim();
+      navigator.clipboard.writeText(text).then(() => {
+        const btn = card.querySelector('.copy-btn');
+        btn.textContent = '✓ 已复制'; btn.classList.add('copied');
+        setTimeout(() => { btn.textContent = '复制'; btn.classList.remove('copied'); }, 1800);
       });
     });
-  }
-
-  // ── Update display ─────────────────────────────────────────────────────────
-  function updateAll() {
-    let refDate;
-    if (useSlider) {
-      refDate = getDateForCity(sliderMinutes, CITIES[0]);
-    } else {
-      refDate = new Date();
-    }
-
-    // update slider display (Beijing time)
-    const bjTime = formatTime(refDate, 'Asia/Shanghai', false);
-    document.getElementById('sliderDisplay').textContent = bjTime;
-
-    // sync slider position to live time
-    if (!useSlider) {
-      const bjParts = new Intl.DateTimeFormat('en-US', {
-        timeZone:'Asia/Shanghai', hour:'2-digit', minute:'2-digit', hour12:false
-      }).format(refDate).split(':');
-      const rawMins = parseInt(bjParts[0]) * 60 + parseInt(bjParts[1]);
-      const mins = Math.round(rawMins / 15) * 15;
-      sliderMinutes = mins;
-      const slider = document.getElementById('timeSlider');
-      slider.value = mins;
-      updateFill(mins);
-    }
-
-    // Beijing is reference; compute day offset for other cities
-    const bjDateStr = new Intl.DateTimeFormat('en-CA', { timeZone:'Asia/Shanghai', year:'numeric', month:'2-digit', day:'2-digit' }).format(refDate);
-
-    CITIES.forEach(city => {
-      const timeStr = formatTime(refDate, city.tz, use12h);
-      const dateStr = formatDate(refDate, city.tz);
-      const cityDateStr = new Intl.DateTimeFormat('en-CA', { timeZone: city.tz, year:'numeric', month:'2-digit', day:'2-digit' }).format(refDate);
-
-      const bjD = new Date(bjDateStr);
-      const cD  = new Date(cityDateStr);
-      const dayDiff = Math.round((cD - bjD) / 86400000);
-
-      let dayBadge = '';
-      if (dayDiff > 0)      dayBadge = `<span class="day-badge next">+${dayDiff}天</span>`;
-      else if (dayDiff < 0) dayBadge = `<span class="day-badge prev">${dayDiff}天</span>`;
-
-      // Render
-      const timeEl = document.getElementById('time-'+city.id);
-      if (use12h) {
-        // split AM/PM
-        const match = timeStr.match(/^(\d+:\d+)\s*(AM|PM)$/i);
-        if (match) {
-          timeEl.innerHTML = `${match[1]}<span class="ampm">${match[2]}</span>`;
-        } else {
-          timeEl.textContent = timeStr;
-        }
-      } else {
-        timeEl.textContent = timeStr;
-      }
-
-      document.getElementById('date-'+city.id).innerHTML = dateStr + dayBadge;
-      document.getElementById('day-'+city.id).textContent = getTzOffset(city.tz);
+    card.querySelector('.delete-btn').addEventListener('click', () => {
+      CITIES = CITIES.filter(c => c.id !== city.id);
+      buildCards();
     });
-  }
-
-  // ── Live header clock ──────────────────────────────────────────────────────
-  function updateLiveClock() {
-    const now = new Date();
-    const timeStr = new Intl.DateTimeFormat('zh-CN', {
-      hour:'2-digit', minute:'2-digit', second:'2-digit', hour12:false
-    }).format(now);
-    const dateStr = new Intl.DateTimeFormat('zh-CN', {
-      year:'numeric', month:'long', day:'numeric', weekday:'long'
-    }).format(now);
-    document.getElementById('liveClock').textContent = timeStr;
-    document.getElementById('liveDate').textContent = dateStr;
-  }
-
-  // ── Range fill ─────────────────────────────────────────────────────────────
-  function updateFill(val) {
-    const pct = val / 1440 * 100;
-    document.getElementById('rangeFill').style.width = pct + '%';
-  }
-
-  // ── Events ─────────────────────────────────────────────────────────────────
-  const slider = document.getElementById('timeSlider');
-  slider.addEventListener('input', () => {
-    useSlider = true;
-    sliderMinutes = parseInt(slider.value);
-    updateFill(sliderMinutes);
-    updateAll();
+    card.querySelector('.drag-handle').addEventListener('pointerdown', onDragStart);
   });
-
-  // double-click slider track = return to live
-  slider.addEventListener('dblclick', () => {
-    useSlider = false;
-    updateAll();
-  });
-
-  const fmtToggle = document.getElementById('fmtToggle');
-  fmtToggle.addEventListener('click', () => {
-    use12h = !use12h;
-    fmtToggle.classList.toggle('active', use12h);
-    updateAll();
-  });
-
-  // ── Init ───────────────────────────────────────────────────────────────────
-  buildCards();
-  updateLiveClock();
   updateAll();
+}
 
-  // tick every second
-  setInterval(() => {
-    updateLiveClock();
-    if (!useSlider) updateAll();
-  }, 1000);
+// ── Drag & Drop ───────────────────────────────────────────────────────────────
+let drag = { active:false, ghost:null, srcId:null, srcIdx:null, lastTarget:null, offX:0, offY:0 };
+
+function onDragStart(e) {
+  e.preventDefault();
+  const card = e.currentTarget.closest('.card');
+  drag.srcId = card.dataset.id;
+  drag.srcIdx = parseInt(card.dataset.index);
+  drag.active = true;
+  const rect = card.getBoundingClientRect();
+  drag.offX = e.clientX - rect.left;
+  drag.offY = e.clientY - rect.top;
+  const ghost = card.cloneNode(true);
+  ghost.className = 'card card-ghost';
+  ghost.style.cssText = `width:${rect.width}px;height:${rect.height}px;left:${rect.left}px;top:${rect.top}px;`;
+  ghost.style.setProperty('--card-accent', card.style.getPropertyValue('--card-accent'));
+  document.body.appendChild(ghost);
+  drag.ghost = ghost;
+  card.classList.add('dragging');
+  document.addEventListener('pointermove', onDragMove, {passive:false});
+  document.addEventListener('pointerup', onDragEnd);
+}
+
+function onDragMove(e) {
+  if (!drag.active) return;
+  e.preventDefault();
+  drag.ghost.style.left = (e.clientX - drag.offX) + 'px';
+  drag.ghost.style.top  = (e.clientY - drag.offY) + 'px';
+  drag.ghost.style.display = 'none';
+  const el = document.elementFromPoint(e.clientX, e.clientY);
+  drag.ghost.style.display = '';
+  const tc = el?.closest?.('.card[data-id]');
+  if (drag.lastTarget && drag.lastTarget !== tc) drag.lastTarget.classList.remove('drag-over');
+  if (tc && tc.dataset.id !== drag.srcId) { tc.classList.add('drag-over'); drag.lastTarget = tc; }
+  else drag.lastTarget = null;
+}
+
+function onDragEnd() {
+  if (!drag.active) return;
+  drag.active = false;
+  document.removeEventListener('pointermove', onDragMove);
+  document.removeEventListener('pointerup', onDragEnd);
+  if (drag.ghost) { drag.ghost.remove(); drag.ghost = null; }
+  if (drag.lastTarget) {
+    drag.lastTarget.classList.remove('drag-over');
+    const destIdx = parseInt(drag.lastTarget.dataset.index);
+    const [item] = CITIES.splice(drag.srcIdx, 1);
+    CITIES.splice(destIdx, 0, item);
+    buildCards();
+  }
+  document.querySelectorAll('.card.dragging').forEach(c => c.classList.remove('dragging'));
+}
+
+// ── Update display ────────────────────────────────────────────────────────────
+function updateAll() {
+  const refDate = useSlider ? getDateForCity(sliderMinutes) : new Date();
+  document.getElementById('sliderDisplay').textContent = formatTime(refDate, 'Asia/Shanghai', false);
+  if (!useSlider) {
+    const parts = new Intl.DateTimeFormat('en-US',{timeZone:'Asia/Shanghai',hour:'2-digit',minute:'2-digit',hour12:false}).format(refDate).split(':');
+    const mins = Math.round((parseInt(parts[0])*60+parseInt(parts[1]))/15)*15;
+    sliderMinutes = mins;
+    document.getElementById('timeSlider').value = mins;
+    updateFill(mins);
+  }
+  const bjDateStr = new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Shanghai',year:'numeric',month:'2-digit',day:'2-digit'}).format(refDate);
+  CITIES.forEach(city => {
+    if (!city || !document.getElementById('time-'+city.id)) return;
+    const timeStr = formatTime(refDate, city.tz, use12h);
+    const dateStr = formatDate(refDate, city.tz);
+    const cityDate = new Intl.DateTimeFormat('en-CA',{timeZone:city.tz,year:'numeric',month:'2-digit',day:'2-digit'}).format(refDate);
+    const diff = Math.round((new Date(cityDate) - new Date(bjDateStr)) / 86400000);
+    const badge = diff > 0 ? `<span class="day-badge next">+${diff}天</span>` : diff < 0 ? `<span class="day-badge prev">${diff}天</span>` : '';
+    const timeEl = document.getElementById('time-'+city.id);
+    if (use12h) {
+      const m = timeStr.match(/^(\d+:\d+)\s*(AM|PM)$/i);
+      timeEl.innerHTML = m ? `${m[1]}<span class="ampm">${m[2]}</span>` : timeStr;
+    } else { timeEl.textContent = timeStr; }
+    document.getElementById('date-'+city.id).innerHTML = dateStr + badge;
+    document.getElementById('day-'+city.id).textContent = getTzOffset(city.tz);
+  });
+}
+
+function updateLiveClock() {
+  const now = new Date();
+  document.getElementById('liveClock').textContent = new Intl.DateTimeFormat('zh-CN',{hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false}).format(now);
+  document.getElementById('liveDate').textContent = new Intl.DateTimeFormat('zh-CN',{year:'numeric',month:'long',day:'numeric',weekday:'long'}).format(now);
+}
+function updateFill(val) { document.getElementById('rangeFill').style.width = (val/1440*100)+'%'; }
+
+// ── Modal & Fuzzy Search ──────────────────────────────────────────────────────
+function fuzzyMatch(query, target) {
+  if (!query) return true;
+  target = target.toLowerCase();
+  query = query.toLowerCase().trim();
+  if (target.includes(query)) return true;
+  let qi = 0;
+  for (let i = 0; i < target.length && qi < query.length; i++) { if (target[i]===query[qi]) qi++; }
+  return qi === query.length;
+}
+
+function renderModalList(query) {
+  const list = document.getElementById('modalList');
+  const activeIds = new Set(CITIES.map(c => c.id));
+  const results = ALL_CITIES.filter(c =>
+    fuzzyMatch(query, c.name) || fuzzyMatch(query, c.nameEn) || fuzzyMatch(query, c.country)
+  );
+  if (!results.length) { list.innerHTML = '<div class="modal-empty">没有找到匹配的城市 😕</div>'; return; }
+  list.innerHTML = results.map(c => {
+    const has = activeIds.has(c.id);
+    return `<div class="city-item${has?' already':''}" data-id="${c.id}">
+      <span class="city-item-flag">${c.flag}</span>
+      <div class="city-item-info">
+        <div class="city-item-name">${c.name} <span style="font-weight:400;color:var(--text-dim);font-size:0.7rem">${c.nameEn}</span></div>
+        <div class="city-item-sub">${c.country}</div>
+      </div>
+      <span class="city-item-tz">${getTzOffset(c.tz)}</span>
+      <span class="city-item-add">${has?'✓':'＋'}</span>
+    </div>`;
+  }).join('');
+  list.querySelectorAll('.city-item:not(.already)').forEach(el => {
+    el.addEventListener('click', () => {
+      const city = ALL_CITIES.find(c => c.id === el.dataset.id);
+      if (city && !CITIES.find(c => c.id === city.id)) {
+        CITIES.push(city); buildCards();
+        renderModalList(document.getElementById('modalSearch').value);
+      }
+    });
+  });
+}
+
+function openModal() {
+  document.getElementById('modalOverlay').classList.add('open');
+  const inp = document.getElementById('modalSearch');
+  inp.value = ''; renderModalList('');
+  setTimeout(() => inp.focus(), 120);
+}
+function closeModal() { document.getElementById('modalOverlay').classList.remove('open'); }
+
+// ── Events ────────────────────────────────────────────────────────────────────
+const slider = document.getElementById('timeSlider');
+slider.addEventListener('input', () => { useSlider=true; sliderMinutes=parseInt(slider.value); updateFill(sliderMinutes); updateAll(); });
+slider.addEventListener('dblclick', () => { useSlider=false; updateAll(); });
+document.getElementById('fmtToggle').addEventListener('click', function(){ use12h=!use12h; this.classList.toggle('active',use12h); updateAll(); });
+document.getElementById('addBtn').addEventListener('click', openModal);
+document.getElementById('modalClose').addEventListener('click', closeModal);
+document.getElementById('modalOverlay').addEventListener('click', e => { if(e.target===document.getElementById('modalOverlay')) closeModal(); });
+document.getElementById('modalSearch').addEventListener('input', e => renderModalList(e.target.value));
+document.addEventListener('keydown', e => { if(e.key==='Escape') closeModal(); });
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+buildCards();
+updateLiveClock();
+updateFill(sliderMinutes);
+setInterval(() => { updateLiveClock(); if(!useSlider) updateAll(); }, 1000);
 </script>
 </body>
 </html>
