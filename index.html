@@ -361,9 +361,27 @@ const ALL_CITIES = [
   {id:'noumea',     name:'努美阿',        nameEn:'Nouméa',          country:'新喀里多尼亚', flag:'🇳🇨', tz:'Pacific/Noumea',                  accent:'#67e8f9'},
 ];
 
+// ── localStorage 持久化 ───────────────────────────────────────────────────────
+const STORAGE_KEY = 'tz_cities_v1';
+const DEFAULT_IDS = ['beijing','tokyo','london','newyork','mexico','saopaulo','toronto','argentina','sydney','cairo'];
+
+function saveCities() {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(CITIES.map(c => c.id))); } catch(e) {}
+}
+function loadCities() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) {
+      const ids = JSON.parse(raw);
+      const list = ids.map(id => ALL_CITIES.find(c => c.id === id)).filter(Boolean);
+      if (list.length) return list;
+    }
+  } catch(e) {}
+  return DEFAULT_IDS.map(id => ALL_CITIES.find(c => c.id === id));
+}
+
 // ── 当前显示城市列表 ──────────────────────────────────────────────────────────
-let CITIES = ['beijing','tokyo','london','newyork','mexico','saopaulo','toronto','argentina','sydney','cairo']
-  .map(id => ALL_CITIES.find(c => c.id === id));
+let CITIES = loadCities();
 
 // ── State ─────────────────────────────────────────────────────────────────────
 let use12h = false, sliderMinutes = 720, useSlider = false;
@@ -430,7 +448,7 @@ function buildCards() {
     });
     card.querySelector('.delete-btn').addEventListener('click', () => {
       CITIES = CITIES.filter(c => c.id !== city.id);
-      buildCards();
+      saveCities(); buildCards();
     });
     card.querySelector('.drag-handle').addEventListener('pointerdown', onDragStart);
   });
@@ -485,7 +503,7 @@ function onDragEnd() {
     const destIdx = parseInt(drag.lastTarget.dataset.index);
     const [item] = CITIES.splice(drag.srcIdx, 1);
     CITIES.splice(destIdx, 0, item);
-    buildCards();
+    saveCities(); buildCards();
   }
   document.querySelectorAll('.card.dragging').forEach(c => c.classList.remove('dragging'));
 }
@@ -560,7 +578,7 @@ function renderModalList(query) {
     el.addEventListener('click', () => {
       const city = ALL_CITIES.find(c => c.id === el.dataset.id);
       if (city && !CITIES.find(c => c.id === city.id)) {
-        CITIES.push(city); buildCards();
+        CITIES.push(city); saveCities(); buildCards();
         renderModalList(document.getElementById('modalSearch').value);
       }
     });
