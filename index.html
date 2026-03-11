@@ -16,21 +16,35 @@
 
     /* Header */
     .header { text-align:center; margin-bottom:40px; }
+    .header-top { display:flex; align-items:center; justify-content:center; gap:12px; margin-bottom:8px; }
     .header h1 { font-size:clamp(1.6rem,4vw,2.4rem); font-weight:700; background:linear-gradient(135deg,var(--accent),var(--accent2)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; letter-spacing:-0.5px; }
-    .header p { color:var(--text-muted); margin-top:8px; font-size:0.95rem; }
+    .header p { color:var(--text-muted); font-size:0.95rem; }
+    .lang-btn { padding:4px 14px; border-radius:20px; font-size:0.75rem; font-weight:600; color:var(--accent); background:rgba(108,138,255,.12); border:1px solid rgba(108,138,255,.4); cursor:pointer; flex-shrink:0; transition:background .15s; }
+    .lang-btn:hover { background:rgba(108,138,255,.22); }
 
     /* Live bar */
-    .live-bar { display:flex; align-items:center; justify-content:center; gap:12px; margin-bottom:36px; flex-wrap:wrap; }
-    .live-dot { width:8px; height:8px; background:var(--success); border-radius:50%; animation:pulse 2s infinite; flex-shrink:0; }
+    .live-bar { display:flex; align-items:center; justify-content:center; gap:12px; margin-bottom:36px; flex-wrap:wrap; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:12px 20px; max-width:760px; margin-left:auto; margin-right:auto; }
+    .live-dot { width:8px; height:8px; background:var(--success); border-radius:50%; animation:pulse 2s infinite; flex-shrink:0; transition:background .3s; }
+    .live-dot.paused { background:var(--accent); animation:none; }
     @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.4;transform:scale(1.4)} }
-    .live-date { font-size:0.9rem; color:var(--text-muted); }
-    .live-clock { font-size:1rem; font-weight:600; color:var(--text); font-variant-numeric:tabular-nums; }
+    .live-date-box { position:relative; cursor:pointer; flex-shrink:0; }
+    .live-date-wrap { display:flex; align-items:center; gap:5px; }
+    .live-date { font-size:0.9rem; color:var(--text-muted); transition:color .2s; }
+    .live-date.custom { color:var(--accent); border-bottom:1px solid rgba(108,138,255,.5); }
+    .live-date-cal { font-size:0.82rem; opacity:0.55; }
+    .live-date-input { position:absolute; inset:0; opacity:0; cursor:pointer; width:100%; height:100%; }
+    .live-sep { color:var(--text-dim); }
+    .live-clock { font-size:1rem; font-weight:600; color:var(--text); font-variant-numeric:tabular-nums; font-family:'Courier New',monospace; }
 
     /* Slider */
     .slider-section { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:28px 32px; max-width:760px; margin:0 auto 40px; box-shadow:var(--shadow); }
-    .slider-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; flex-wrap:wrap; gap:8px; }
-    .slider-label { font-size:0.85rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.08em; }
-    .slider-value { font-size:1.6rem; font-weight:700; font-variant-numeric:tabular-nums; color:var(--text); }
+    .slider-header { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:20px; flex-wrap:wrap; gap:8px; }
+    .slider-label { font-size:0.85rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.08em; display:block; margin-bottom:4px; }
+    .slider-value { font-size:1.6rem; font-weight:700; font-variant-numeric:tabular-nums; color:var(--text); font-family:'Courier New',monospace; }
+    .slider-btns { display:flex; gap:8px; align-items:center; }
+    .mode-btn { padding:5px 14px; border-radius:20px; font-size:0.8rem; color:var(--text-muted); background:var(--surface2); border:1px solid var(--border); cursor:pointer; transition:all .15s; }
+    .mode-btn.active { color:var(--accent); border-color:var(--accent); background:rgba(108,138,255,.12); }
+    .mode-btn:hover:not(.active) { border-color:var(--text-dim); color:var(--text); }
     input[type=range] { -webkit-appearance:none; width:100%; height:6px; border-radius:3px; background:var(--border); outline:none; cursor:pointer; }
     input[type=range]::-webkit-slider-thumb { -webkit-appearance:none; width:22px; height:22px; border-radius:50%; background:linear-gradient(135deg,var(--accent),var(--accent2)); box-shadow:0 0 0 4px rgba(108,138,255,.2); transition:box-shadow .15s; }
     input[type=range]::-webkit-slider-thumb:hover { box-shadow:0 0 0 6px rgba(108,138,255,.3); }
@@ -39,12 +53,6 @@
     .range-fill { position:absolute; top:50%; left:0; height:6px; border-radius:3px 0 0 3px; background:linear-gradient(to right,var(--accent),var(--accent2)); pointer-events:none; transform:translateY(-50%); }
     .slider-ticks { display:flex; justify-content:space-between; margin-top:10px; }
     .slider-ticks span { font-size:0.72rem; color:var(--text-dim); }
-    .mode-toggle { display:flex; align-items:center; gap:8px; margin-top:20px; padding-top:20px; border-top:1px solid var(--border); }
-    .mode-toggle label { font-size:0.85rem; color:var(--text-muted); cursor:pointer; }
-    .toggle-btn { position:relative; width:40px; height:22px; background:var(--border); border-radius:11px; border:none; cursor:pointer; transition:background .2s; }
-    .toggle-btn.active { background:var(--accent); }
-    .toggle-btn::after { content:''; position:absolute; top:3px; left:3px; width:16px; height:16px; border-radius:50%; background:#fff; transition:transform .2s; }
-    .toggle-btn.active::after { transform:translateX(18px); }
 
     /* Grid */
     .grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); gap:20px; max-width:1100px; margin:0 auto; }
@@ -60,17 +68,17 @@
     .city-name { font-size:1rem; font-weight:600; color:var(--text); }
     .city-tz { font-size:0.75rem; color:var(--text-muted); margin-top:2px; }
     .card-actions { display:flex; gap:5px; align-items:center; flex-shrink:0; }
+    .delete-btn { background:var(--surface2); border:1px solid var(--border); border-radius:8px; color:var(--text-dim); font-size:0.78rem; width:26px; height:26px; cursor:pointer; transition:all .15s; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+    .delete-btn:hover { background:rgba(239,68,68,.15); border-color:#ef4444; color:#ef4444; }
     .copy-btn { background:var(--surface2); border:1px solid var(--border); border-radius:8px; color:var(--text-muted); font-size:0.72rem; padding:5px 10px; cursor:pointer; transition:all .15s; white-space:nowrap; }
     .copy-btn:hover { background:var(--border); color:var(--text); }
     .copy-btn.copied { background:rgba(74,222,128,.15); border-color:var(--success); color:var(--success); }
-    .delete-btn { background:transparent; border:1px solid var(--border); border-radius:8px; color:var(--text-dim); font-size:0.78rem; width:26px; height:26px; cursor:pointer; transition:all .15s; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
-    .delete-btn:hover { background:rgba(239,68,68,.15); border-color:#ef4444; color:#ef4444; }
     .drag-handle { color:var(--text-dim); font-size:1.1rem; cursor:grab; padding:2px 3px; transition:color .15s; touch-action:none; flex-shrink:0; line-height:1; display:flex; align-items:center; }
     .drag-handle:hover { color:var(--text-muted); }
     .drag-handle:active { cursor:grabbing; }
     .card-ghost { position:fixed; pointer-events:none; z-index:1000; opacity:0.88; transform:rotate(1.5deg) scale(1.04); box-shadow:0 20px 48px rgba(0,0,0,.65); transition:none; }
-    .card-time { font-size:2.6rem; font-weight:800; font-variant-numeric:tabular-nums; line-height:1; letter-spacing:-1px; color:var(--text); }
-    .card-time .ampm { font-size:1rem; font-weight:500; color:var(--text-muted); margin-left:4px; letter-spacing:0; }
+    .card-time { font-size:2.6rem; font-weight:800; font-variant-numeric:tabular-nums; line-height:1; letter-spacing:-1px; color:var(--text); font-family:'Courier New',monospace; }
+    .card-time .ampm { font-size:1rem; font-weight:500; color:var(--text-muted); margin-left:4px; letter-spacing:0; font-family:inherit; }
     .card-date { margin-top:8px; font-size:0.8rem; color:var(--text-muted); }
     .card-offset { display:inline-block; margin-top:12px; font-size:0.72rem; color:var(--text-dim); background:var(--surface2); border-radius:6px; padding:3px 8px; }
     .day-badge { display:inline-flex; align-items:center; gap:4px; margin-left:8px; font-size:0.65rem; padding:2px 7px; border-radius:20px; vertical-align:middle; }
@@ -83,29 +91,28 @@
     .add-btn:hover { border-color:var(--accent); color:var(--accent); background:rgba(108,138,255,.06); }
 
     /* Modal */
-    .modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,.72); display:flex; align-items:center; justify-content:center; z-index:900; opacity:0; pointer-events:none; transition:opacity .2s; padding:16px; }
+    .modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,.72); display:flex; align-items:flex-end; justify-content:center; z-index:900; opacity:0; pointer-events:none; transition:opacity .2s; padding:0; }
     .modal-overlay.open { opacity:1; pointer-events:all; }
-    .modal-box { background:var(--surface); border:1px solid var(--border); border-radius:20px; width:100%; max-width:480px; max-height:80vh; display:flex; flex-direction:column; box-shadow:0 24px 64px rgba(0,0,0,.6); transform:scale(.95); transition:transform .2s; }
-    .modal-overlay.open .modal-box { transform:scale(1); }
-    .modal-header { display:flex; align-items:center; justify-content:space-between; padding:20px 20px 0; }
+    .modal-box { background:var(--surface); border:1px solid var(--border); border-radius:20px 20px 0 0; width:100%; max-width:600px; height:85vh; display:flex; flex-direction:column; box-shadow:0 -8px 40px rgba(0,0,0,.5); transform:translateY(20px); transition:transform .2s; }
+    .modal-overlay.open .modal-box { transform:translateY(0); }
+    .modal-header { display:flex; align-items:center; justify-content:space-between; padding:20px 20px 0; flex-shrink:0; }
     .modal-title { font-size:1rem; font-weight:600; color:var(--text); }
     .modal-close { background:var(--surface2); border:1px solid var(--border); border-radius:8px; color:var(--text-muted); width:30px; height:30px; cursor:pointer; font-size:1rem; display:flex; align-items:center; justify-content:center; transition:all .15s; }
     .modal-close:hover { color:var(--text); background:var(--border); }
-    .modal-search-wrap { padding:14px 16px 10px; }
+    .modal-search-wrap { padding:14px 16px 10px; flex-shrink:0; }
     .modal-search { width:100%; background:var(--surface2); border:1px solid var(--border); border-radius:10px; color:var(--text); font-size:0.9rem; padding:10px 14px; outline:none; transition:border-color .15s; }
     .modal-search:focus { border-color:var(--accent); }
     .modal-search::placeholder { color:var(--text-dim); }
     .modal-list { overflow-y:auto; padding:0 10px 14px; flex:1; }
     .modal-list::-webkit-scrollbar { width:4px; }
     .modal-list::-webkit-scrollbar-thumb { background:var(--border); border-radius:2px; }
-    .city-item { display:flex; align-items:center; gap:10px; padding:9px 8px; border-radius:10px; cursor:pointer; transition:background .12s; }
+    .city-item { display:flex; align-items:center; gap:10px; padding:9px 8px; border-radius:10px; cursor:pointer; transition:background .12s; border-bottom:1px solid rgba(46,50,72,.5); }
     .city-item:hover { background:var(--surface2); }
     .city-item.already { opacity:.35; pointer-events:none; }
     .city-item-flag { font-size:1.4rem; flex-shrink:0; }
     .city-item-info { flex:1; min-width:0; }
     .city-item-name { font-size:0.88rem; font-weight:600; color:var(--text); }
     .city-item-sub { font-size:0.7rem; color:var(--text-muted); margin-top:1px; }
-    .city-item-tz { font-size:0.7rem; color:var(--text-dim); flex-shrink:0; }
     .city-item-add { color:var(--accent); font-size:1.2rem; flex-shrink:0; font-weight:600; }
     .city-item.already .city-item-add { color:var(--success); }
     .modal-empty { text-align:center; padding:32px 16px; color:var(--text-dim); font-size:0.85rem; }
@@ -116,8 +123,8 @@
     /* Mobile */
     @media (max-width:600px) {
       body { padding:20px 10px 48px; }
-      .header { margin-bottom:24px; }
-      .live-bar { margin-bottom:20px; gap:8px; }
+      .header { margin-bottom:20px; }
+      .live-bar { margin-bottom:20px; gap:8px; padding:10px 14px; }
       .slider-section { padding:16px 14px; margin-bottom:24px; }
       .slider-value { font-size:1.3rem; }
       .grid { grid-template-columns:repeat(2,1fr); gap:10px; }
@@ -134,28 +141,42 @@
       .card-date { font-size:0.68rem; margin-top:4px; }
       .card-offset { font-size:0.65rem; padding:2px 6px; margin-top:6px; }
       .day-badge { font-size:0.6rem; padding:1px 5px; }
+      .mode-btn { font-size:0.75rem; padding:4px 10px; }
     }
   </style>
 </head>
 <body>
 
 <div class="header">
-  <h1>🌐 跨时区时间转换</h1>
-  <p>拖动滑块，即时查看全球各城市时间</p>
+  <div class="header-top">
+    <h1>🌐 <span id="i18nTitle"></span></h1>
+    <button class="lang-btn" id="langBtn"></button>
+  </div>
+  <p id="i18nSubtitle"></p>
 </div>
 
-<div class="live-bar">
-  <span class="live-dot"></span>
-  <span class="live-date" id="liveDate"></span>
-  <span style="color:var(--text-dim)">·</span>
+<div class="live-bar" style="margin-bottom:36px">
+  <span class="live-dot" id="liveDot"></span>
+  <div class="live-date-box">
+    <div class="live-date-wrap">
+      <span class="live-date" id="liveDate"></span>
+      <span class="live-date-cal">📅</span>
+    </div>
+    <input type="date" id="datePicker" class="live-date-input" />
+  </div>
+  <span class="live-sep">·</span>
   <span class="live-clock" id="liveClock"></span>
 </div>
 
 <div class="slider-section">
   <div class="slider-header">
     <div>
-      <div class="slider-label">选择参考时间（北京）</div>
+      <span class="slider-label" id="i18nSliderLabel"></span>
       <div class="slider-value" id="sliderDisplay">12:00</div>
+    </div>
+    <div class="slider-btns">
+      <button class="mode-btn active" id="liveBtn"></button>
+      <button class="mode-btn" id="fmtBtn">24h</button>
     </div>
   </div>
   <div class="range-wrap">
@@ -165,32 +186,28 @@
   <div class="slider-ticks">
     <span>00:00</span><span>06:00</span><span>12:00</span><span>18:00</span><span>24:00</span>
   </div>
-  <div class="mode-toggle">
-    <button class="toggle-btn" id="fmtToggle" title="切换12/24小时制"></button>
-    <label for="fmtToggle" onclick="document.getElementById('fmtToggle').click()">12小时制</label>
-  </div>
 </div>
 
 <div class="grid" id="cityGrid"></div>
 
 <div class="add-btn-wrap">
-  <button class="add-btn" id="addBtn">＋ 添加城市 / 区域</button>
+  <button class="add-btn" id="addBtn"></button>
 </div>
 
 <div class="modal-overlay" id="modalOverlay">
   <div class="modal-box">
     <div class="modal-header">
-      <span class="modal-title">🔍 添加城市</span>
+      <span class="modal-title" id="i18nModalTitle"></span>
       <button class="modal-close" id="modalClose">✕</button>
     </div>
     <div class="modal-search-wrap">
-      <input class="modal-search" id="modalSearch" placeholder="搜索城市、国家（支持中英文模糊搜索）…" autocomplete="off" />
+      <input class="modal-search" id="modalSearch" autocomplete="off" />
     </div>
     <div class="modal-list" id="modalList"></div>
   </div>
 </div>
 
-<footer>基于原生 JavaScript · 无外部依赖 · 数据来源于 IANA 时区数据库</footer>
+<footer id="i18nFooter"></footer>
 
 <script>
 // ── 全球城市数据库 ────────────────────────────────────────────────────────────
@@ -361,8 +378,75 @@ const ALL_CITIES = [
   {id:'noumea',     name:'努美阿',        nameEn:'Nouméa',          country:'新喀里多尼亚', flag:'🇳🇨', tz:'Pacific/Noumea',                  accent:'#67e8f9'},
 ];
 
+// ── 国家名英文对照 ────────────────────────────────────────────────────────────
+const COUNTRY_EN = {
+  '中国':'China', '中国香港':'Hong Kong', '中国台湾':'Taiwan', '中国澳门':'Macau',
+  '日本':'Japan', '韩国':'South Korea', '新加坡':'Singapore', '泰国':'Thailand',
+  '印度尼西亚':'Indonesia', '菲律宾':'Philippines', '马来西亚':'Malaysia', '缅甸':'Myanmar',
+  '越南':'Vietnam', '柬埔寨':'Cambodia', '老挝':'Laos', '印度':'India',
+  '孟加拉国':'Bangladesh', '巴基斯坦':'Pakistan', '尼泊尔':'Nepal', '斯里兰卡':'Sri Lanka',
+  '乌兹别克斯坦':'Uzbekistan', '哈萨克斯坦':'Kazakhstan', '蒙古':'Mongolia', '伊朗':'Iran',
+  '阿联酋':'UAE', '沙特阿拉伯':'Saudi Arabia', '伊拉克':'Iraq', '科威特':'Kuwait',
+  '卡塔尔':'Qatar', '巴林':'Bahrain', '阿曼':'Oman', '以色列':'Israel',
+  '土耳其':'Turkey', '阿塞拜疆':'Azerbaijan', '亚美尼亚':'Armenia', '格鲁吉亚':'Georgia',
+  '英国':'UK', '法国':'France', '德国':'Germany', '意大利':'Italy',
+  '西班牙':'Spain', '荷兰':'Netherlands', '比利时':'Belgium', '奥地利':'Austria',
+  '瑞士':'Switzerland', '瑞典':'Sweden', '挪威':'Norway', '丹麦':'Denmark',
+  '芬兰':'Finland', '波兰':'Poland', '希腊':'Greece', '葡萄牙':'Portugal',
+  '俄罗斯':'Russia', '捷克':'Czech Republic', '匈牙利':'Hungary', '罗马尼亚':'Romania',
+  '乌克兰':'Ukraine', '保加利亚':'Bulgaria', '塞尔维亚':'Serbia', '克罗地亚':'Croatia',
+  '爱尔兰':'Ireland', '冰岛':'Iceland',
+  '美国':'USA', '美国夏威夷':'USA (Hawaii)', '美国阿拉斯加':'USA (Alaska)',
+  '加拿大':'Canada', '墨西哥':'Mexico', '巴西':'Brazil', '阿根廷':'Argentina',
+  '智利':'Chile', '秘鲁':'Peru', '哥伦比亚':'Colombia', '委内瑞拉':'Venezuela',
+  '古巴':'Cuba', '巴拿马':'Panama', '哥斯达黎加':'Costa Rica', '厄瓜多尔':'Ecuador',
+  '玻利维亚':'Bolivia', '巴拉圭':'Paraguay', '乌拉圭':'Uruguay',
+  '埃及':'Egypt', '尼日利亚':'Nigeria', '肯尼亚':'Kenya', '南非':'South Africa',
+  '摩洛哥':'Morocco', '加纳':'Ghana', '埃塞俄比亚':'Ethiopia', '苏丹':'Sudan',
+  '塞内加尔':'Senegal', '突尼斯':'Tunisia', '阿尔及利亚':'Algeria', '利比亚':'Libya',
+  '安哥拉':'Angola', '刚果（金）':'DR Congo', '坦桑尼亚':'Tanzania', '乌干达':'Uganda',
+  '津巴布韦':'Zimbabwe', '莫桑比克':'Mozambique', '马达加斯加':'Madagascar',
+  '澳大利亚':'Australia', '新西兰':'New Zealand', '斐济':'Fiji',
+  '巴布亚新几内亚':'Papua New Guinea', '新喀里多尼亚':'New Caledonia',
+};
+
+// ── 国际化文案 ────────────────────────────────────────────────────────────────
+const I18N = {
+  zh: {
+    title:             '跨时区时间转换',
+    subtitle:          '拖动滑块，即时查看全球各城市时间',
+    sliderLabel:       '选择参考时间（北京）',
+    liveBtn:           '实时',
+    copyBtn:           '复制',
+    copiedBtn:         '已复制',
+    dayUnit:           '天',
+    addBtn:            '＋ 添加城市 / 区域',
+    footer:            '基于原生 JavaScript · 无外部依赖 · 数据来源于 IANA 时区数据库',
+    modalTitle:        '🔍 添加城市',
+    searchPlaceholder: '搜索城市、国家（支持中英文模糊搜索）…',
+    modalEmpty:        '没有找到匹配的城市 😕',
+    langBtn:           'EN',
+  },
+  en: {
+    title:             'Timezone Converter',
+    subtitle:          'Drag slider to see world city times instantly',
+    sliderLabel:       'Reference Time (Beijing)',
+    liveBtn:           'Live',
+    copyBtn:           'Copy',
+    copiedBtn:         'Copied',
+    dayUnit:           'd',
+    addBtn:            '＋ Add City / Region',
+    footer:            'Vanilla JavaScript · No dependencies · Data from IANA Timezone Database',
+    modalTitle:        '🔍 Add City',
+    searchPlaceholder: 'Search city or country…',
+    modalEmpty:        'No cities found 😕',
+    langBtn:           '中',
+  },
+};
+
 // ── localStorage 持久化 ───────────────────────────────────────────────────────
 const STORAGE_KEY = 'tz_cities_v1';
+const LANG_KEY    = 'tz_lang_v1';
 const DEFAULT_IDS = ['beijing','tokyo','london','newyork','mexico','saopaulo','toronto','argentina','sydney','cairo'];
 
 function saveCities() {
@@ -379,28 +463,46 @@ function loadCities() {
   } catch(e) {}
   return DEFAULT_IDS.map(id => ALL_CITIES.find(c => c.id === id));
 }
+function loadLang() {
+  try {
+    const v = localStorage.getItem(LANG_KEY);
+    if (v === 'zh' || v === 'en') return v;
+  } catch(e) {}
+  return 'zh';
+}
+function saveLang() {
+  try { localStorage.setItem(LANG_KEY, lang); } catch(e) {}
+}
 
-// ── 当前显示城市列表 ──────────────────────────────────────────────────────────
+// ── 当前状态 ──────────────────────────────────────────────────────────────────
 let CITIES = loadCities();
-
-// ── State ─────────────────────────────────────────────────────────────────────
+let lang = loadLang();
 let use12h = false, sliderMinutes = 720, useSlider = false;
+let selectedDateStr = new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Shanghai',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 function pad(n) { return String(n).padStart(2,'0'); }
 
-function getDateForCity(refMins) {
-  const now = new Date();
-  const bjStr = new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Shanghai',year:'numeric',month:'2-digit',day:'2-digit'}).format(now);
-  const [y,m,d] = bjStr.split('-').map(Number);
-  return new Date(Date.UTC(y,m-1,d,Math.floor(refMins/60)%24,refMins%60,0) - 8*3600000);
+function getRefDate() {
+  if (!useSlider) return new Date();
+  const [y,m,d] = selectedDateStr.split('-').map(Number);
+  return new Date(Date.UTC(y,m-1,d,Math.floor(sliderMinutes/60)%24,sliderMinutes%60,0) - 8*3600000);
 }
 
 function formatTime(date, tz, fmt12) {
   return new Intl.DateTimeFormat('en-US',{timeZone:tz,hour:'2-digit',minute:'2-digit',hour12:fmt12}).format(date);
 }
 function formatDate(date, tz) {
-  return new Intl.DateTimeFormat('zh-CN',{timeZone:tz,month:'long',day:'numeric',weekday:'short'}).format(date);
+  const locale = lang === 'en' ? 'en-US' : 'zh-CN';
+  const opts = lang === 'en'
+    ? {timeZone:tz, month:'short', day:'numeric', weekday:'short'}
+    : {timeZone:tz, month:'long',  day:'numeric', weekday:'short'};
+  return new Intl.DateTimeFormat(locale, opts).format(date);
+}
+function formatDateDisplay(dateStr) {
+  const [y,m,d] = dateStr.split('-').map(Number);
+  const locale = lang === 'en' ? 'en-US' : 'zh-CN';
+  return new Intl.DateTimeFormat(locale,{year:'numeric',month:'long',day:'numeric',weekday:'long'}).format(new Date(y,m-1,d));
 }
 function getTzOffset(tz) {
   try {
@@ -428,10 +530,26 @@ function getTzOffset(tz) {
   } catch(e2) { return tz; }
 }
 
+// ── Apply i18n ────────────────────────────────────────────────────────────────
+function applyI18n() {
+  const t = I18N[lang];
+  document.getElementById('i18nTitle').textContent = t.title;
+  document.getElementById('i18nSubtitle').textContent = t.subtitle;
+  document.getElementById('i18nSliderLabel').textContent = t.sliderLabel;
+  document.getElementById('liveBtn').textContent = t.liveBtn;
+  document.getElementById('langBtn').textContent = t.langBtn;
+  document.getElementById('addBtn').textContent = t.addBtn;
+  document.getElementById('i18nFooter').textContent = t.footer;
+  document.getElementById('i18nModalTitle').textContent = t.modalTitle;
+  document.getElementById('modalSearch').placeholder = t.searchPlaceholder;
+  document.documentElement.lang = lang === 'en' ? 'en' : 'zh-CN';
+}
+
 // ── Build cards ───────────────────────────────────────────────────────────────
 function buildCards() {
   const grid = document.getElementById('cityGrid');
   grid.innerHTML = '';
+  const t = I18N[lang];
   CITIES.forEach((city, index) => {
     if (!city) return;
     const card = document.createElement('div');
@@ -440,17 +558,18 @@ function buildCards() {
     card.dataset.id = city.id;
     card.dataset.index = index;
     card.style.setProperty('--card-accent', city.accent);
+    const cityName = lang === 'en' ? city.nameEn : city.name;
     card.innerHTML = `
       <div class="card-top">
         <div class="city-info">
           <div class="city-flag">${city.flag}</div>
-          <div class="city-name">${city.name}</div>
+          <div class="city-name">${cityName}</div>
           <div class="city-tz">${getTzOffset(city.tz)}</div>
         </div>
         <div class="card-actions">
-          <button class="copy-btn" title="复制时间">复制</button>
-          <button class="delete-btn" title="移除">✕</button>
-          <span class="drag-handle" title="拖动排序">⠿</span>
+          <button class="delete-btn" title="${lang==='en'?'Remove':'移除'}">✕</button>
+          <button class="copy-btn">${t.copyBtn}</button>
+          <span class="drag-handle" title="${lang==='en'?'Drag to reorder':'拖动排序'}">⠿</span>
         </div>
       </div>
       <div class="card-time" id="time-${city.id}">--:--</div>
@@ -462,8 +581,8 @@ function buildCards() {
       const text = document.getElementById('time-'+city.id).textContent.trim();
       navigator.clipboard.writeText(text).then(() => {
         const btn = card.querySelector('.copy-btn');
-        btn.textContent = '✓ 已复制'; btn.classList.add('copied');
-        setTimeout(() => { btn.textContent = '复制'; btn.classList.remove('copied'); }, 1800);
+        btn.textContent = t.copiedBtn; btn.classList.add('copied');
+        setTimeout(() => { btn.textContent = t.copyBtn; btn.classList.remove('copied'); }, 1800);
       });
     });
     card.querySelector('.delete-btn').addEventListener('click', () => {
@@ -530,7 +649,8 @@ function onDragEnd() {
 
 // ── Update display ────────────────────────────────────────────────────────────
 function updateAll() {
-  const refDate = useSlider ? getDateForCity(sliderMinutes) : new Date();
+  const t = I18N[lang];
+  const refDate = getRefDate();
   document.getElementById('sliderDisplay').textContent = formatTime(refDate, 'Asia/Shanghai', false);
   if (!useSlider) {
     const parts = new Intl.DateTimeFormat('en-US',{timeZone:'Asia/Shanghai',hour:'2-digit',minute:'2-digit',hour12:false}).format(refDate).split(':');
@@ -539,6 +659,14 @@ function updateAll() {
     document.getElementById('timeSlider').value = mins;
     updateFill(mins);
   }
+  // Update live dot and date style
+  document.getElementById('liveDot').classList.toggle('paused', useSlider);
+  document.getElementById('liveDate').classList.toggle('custom', useSlider);
+  // Update live/fmt buttons
+  document.getElementById('liveBtn').classList.toggle('active', !useSlider);
+  document.getElementById('fmtBtn').classList.toggle('active', use12h);
+  document.getElementById('fmtBtn').textContent = use12h ? '12h' : '24h';
+
   const bjDateStr = new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Shanghai',year:'numeric',month:'2-digit',day:'2-digit'}).format(refDate);
   CITIES.forEach(city => {
     if (!city || !document.getElementById('time-'+city.id)) return;
@@ -546,7 +674,7 @@ function updateAll() {
     const dateStr = formatDate(refDate, city.tz);
     const cityDate = new Intl.DateTimeFormat('en-CA',{timeZone:city.tz,year:'numeric',month:'2-digit',day:'2-digit'}).format(refDate);
     const diff = Math.round((new Date(cityDate) - new Date(bjDateStr)) / 86400000);
-    const badge = diff > 0 ? `<span class="day-badge next">+${diff}天</span>` : diff < 0 ? `<span class="day-badge prev">${diff}天</span>` : '';
+    const badge = diff > 0 ? `<span class="day-badge next">+${diff}${t.dayUnit}</span>` : diff < 0 ? `<span class="day-badge prev">${diff}${t.dayUnit}</span>` : '';
     const timeEl = document.getElementById('time-'+city.id);
     if (use12h) {
       const m = timeStr.match(/^(\d+:\d+)\s*(AM|PM)$/i);
@@ -559,9 +687,16 @@ function updateAll() {
 
 function updateLiveClock() {
   const now = new Date();
-  document.getElementById('liveClock').textContent = new Intl.DateTimeFormat('zh-CN',{hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false}).format(now);
-  document.getElementById('liveDate').textContent = new Intl.DateTimeFormat('zh-CN',{year:'numeric',month:'long',day:'numeric',weekday:'long'}).format(now);
+  const locale = lang === 'en' ? 'en-US' : 'zh-CN';
+  document.getElementById('liveClock').textContent = new Intl.DateTimeFormat('en-US',{hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false}).format(now);
+  if (!useSlider) {
+    const liveDateStr = new Intl.DateTimeFormat(locale,{year:'numeric',month:'long',day:'numeric',weekday:'long'}).format(now);
+    document.getElementById('liveDate').textContent = liveDateStr;
+    selectedDateStr = new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Shanghai',year:'numeric',month:'2-digit',day:'2-digit'}).format(now);
+    document.getElementById('datePicker').value = selectedDateStr;
+  }
 }
+
 function updateFill(val) { document.getElementById('rangeFill').style.width = (val/1440*100)+'%'; }
 
 // ── Modal & Fuzzy Search ──────────────────────────────────────────────────────
@@ -576,19 +711,23 @@ function fuzzyMatch(query, target) {
 }
 
 function renderModalList(query) {
+  const t = I18N[lang];
   const list = document.getElementById('modalList');
   const activeIds = new Set(CITIES.map(c => c.id));
   const results = ALL_CITIES.filter(c =>
     fuzzyMatch(query, c.name) || fuzzyMatch(query, c.nameEn) || fuzzyMatch(query, c.country)
   );
-  if (!results.length) { list.innerHTML = '<div class="modal-empty">没有找到匹配的城市 😕</div>'; return; }
+  if (!results.length) { list.innerHTML = `<div class="modal-empty">${t.modalEmpty}</div>`; return; }
   list.innerHTML = results.map(c => {
     const has = activeIds.has(c.id);
+    const primaryName = lang === 'en' ? c.nameEn : c.name;
+    const secondaryName = lang === 'en' ? c.name : c.nameEn;
+    const countryName = lang === 'en' ? (COUNTRY_EN[c.country] || c.country) : c.country;
     return `<div class="city-item${has?' already':''}" data-id="${c.id}">
       <span class="city-item-flag">${c.flag}</span>
       <div class="city-item-info">
-        <div class="city-item-name">${c.name} <span style="font-weight:400;color:var(--text-dim);font-size:0.7rem">${c.nameEn}</span></div>
-        <div class="city-item-sub">${c.country}</div>
+        <div class="city-item-name">${primaryName} <span style="font-weight:400;color:var(--text-dim);font-size:0.7rem">${secondaryName}</span></div>
+        <div class="city-item-sub">${countryName}</div>
       </div>
       <span class="city-item-tz">${getTzOffset(c.tz)}</span>
       <span class="city-item-add">${has?'✓':'＋'}</span>
@@ -614,10 +753,64 @@ function openModal() {
 function closeModal() { document.getElementById('modalOverlay').classList.remove('open'); }
 
 // ── Events ────────────────────────────────────────────────────────────────────
+// Slider
 const slider = document.getElementById('timeSlider');
-slider.addEventListener('input', () => { useSlider=true; sliderMinutes=parseInt(slider.value); updateFill(sliderMinutes); updateAll(); });
-slider.addEventListener('dblclick', () => { useSlider=false; updateAll(); });
-document.getElementById('fmtToggle').addEventListener('click', function(){ use12h=!use12h; this.classList.toggle('active',use12h); updateAll(); });
+slider.addEventListener('input', () => {
+  useSlider = true;
+  sliderMinutes = parseInt(slider.value);
+  updateFill(sliderMinutes);
+  // Show selected date in live bar
+  document.getElementById('liveDate').textContent = formatDateDisplay(selectedDateStr);
+  updateAll();
+});
+
+// Date picker
+const datePicker = document.getElementById('datePicker');
+const now = new Date();
+const minDate = new Date(now); minDate.setFullYear(minDate.getFullYear()-1);
+const maxDate = new Date(now); maxDate.setFullYear(maxDate.getFullYear()+1);
+datePicker.min = new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Shanghai',year:'numeric',month:'2-digit',day:'2-digit'}).format(minDate);
+datePicker.max = new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Shanghai',year:'numeric',month:'2-digit',day:'2-digit'}).format(maxDate);
+datePicker.addEventListener('change', () => {
+  if (!datePicker.value) return;
+  selectedDateStr = datePicker.value;
+  useSlider = true;
+  document.getElementById('liveDate').textContent = formatDateDisplay(selectedDateStr);
+  updateAll();
+});
+
+// Live button (reset to live mode)
+document.getElementById('liveBtn').addEventListener('click', () => {
+  useSlider = false;
+  updateAll();
+  updateLiveClock();
+});
+
+// Format toggle
+document.getElementById('fmtBtn').addEventListener('click', function() {
+  use12h = !use12h;
+  updateAll();
+});
+
+// Lang toggle
+document.getElementById('langBtn').addEventListener('click', () => {
+  lang = lang === 'zh' ? 'en' : 'zh';
+  saveLang();
+  applyI18n();
+  // Rebuild cards for new language names
+  buildCards();
+  // Update live clock for new locale
+  updateLiveClock();
+  if (useSlider) {
+    document.getElementById('liveDate').textContent = formatDateDisplay(selectedDateStr);
+  }
+  // Re-render modal list if open
+  if (document.getElementById('modalOverlay').classList.contains('open')) {
+    renderModalList(document.getElementById('modalSearch').value);
+  }
+});
+
+// Modal
 document.getElementById('addBtn').addEventListener('click', openModal);
 document.getElementById('modalClose').addEventListener('click', closeModal);
 document.getElementById('modalOverlay').addEventListener('click', e => { if(e.target===document.getElementById('modalOverlay')) closeModal(); });
@@ -625,6 +818,7 @@ document.getElementById('modalSearch').addEventListener('input', e => renderModa
 document.addEventListener('keydown', e => { if(e.key==='Escape') closeModal(); });
 
 // ── Init ──────────────────────────────────────────────────────────────────────
+applyI18n();
 buildCards();
 updateLiveClock();
 updateFill(sliderMinutes);
