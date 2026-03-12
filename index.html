@@ -39,7 +39,11 @@
     /* Slider */
     .slider-section { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:28px 32px; max-width:760px; margin:0 auto 40px; box-shadow:var(--shadow); }
     .slider-header { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:20px; flex-wrap:wrap; gap:8px; }
-    .slider-label { font-size:0.85rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.08em; display:block; margin-bottom:4px; }
+    .slider-label { font-size:0.85rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.08em; }
+    .slider-label-row { display:flex; align-items:center; gap:8px; margin-bottom:4px; }
+    .ref-city-tag { display:inline-flex; align-items:center; gap:5px; background:var(--surface2); border:1px solid var(--border); border-radius:20px; padding:3px 10px 3px 8px; font-size:0.78rem; color:var(--text-muted); cursor:pointer; transition:all .15s; }
+    .ref-city-tag:hover { border-color:var(--accent); color:var(--accent); }
+    .ref-city-arrow { color:var(--text-dim); font-size:0.8rem; }
     .slider-value { font-size:1.6rem; font-weight:700; font-variant-numeric:tabular-nums; color:var(--text); font-family:'Courier New',monospace; }
     .slider-btns { display:flex; gap:8px; align-items:center; }
     .mode-btn { padding:5px 14px; border-radius:20px; font-size:0.8rem; color:var(--text-muted); background:var(--surface2); border:1px solid var(--border); cursor:pointer; transition:all .15s; }
@@ -144,6 +148,7 @@
       .card-offset { font-size:0.65rem; padding:2px 6px; margin-top:6px; }
       .day-badge { font-size:0.6rem; padding:1px 5px; }
       .mode-btn { font-size:0.75rem; padding:4px 10px; }
+      .ref-city-tag { font-size:0.72rem; padding:2px 8px 2px 6px; }
     }
   </style>
 </head>
@@ -173,7 +178,14 @@
 <div class="slider-section">
   <div class="slider-header">
     <div>
-      <span class="slider-label" id="i18nSliderLabel"></span>
+      <div class="slider-label-row">
+        <span class="slider-label" id="i18nSliderLabel"></span>
+        <button class="ref-city-tag" id="refCityBtn">
+          <span id="refCityFlag"></span>
+          <span id="refCityName"></span>
+          <span class="ref-city-arrow">›</span>
+        </button>
+      </div>
       <div class="slider-value" id="sliderDisplay">12:00</div>
     </div>
     <div class="slider-btns">
@@ -417,7 +429,7 @@ const I18N = {
   zh: {
     title:             '跨时区时间转换',
     subtitle:          '拖动滑块，即时查看全球各城市时间',
-    sliderLabel:       '选择参考时间（北京）',
+    sliderLabel:       '参考时间',
     liveBtn:           '实时',
     copyBtn:           '复制',
     copiedBtn:         '已复制',
@@ -425,6 +437,7 @@ const I18N = {
     addBtn:            '＋ 添加城市 / 区域',
     footer:            '基于原生 JavaScript · 无外部依赖 · 数据来源于 IANA 时区数据库',
     modalTitle:        '🔍 添加城市',
+    refModalTitle:     '🔍 选择参考城市',
     searchPlaceholder: '搜索城市、国家（支持中英文模糊搜索）…',
     modalEmpty:        '没有找到匹配的城市 😕',
     langBtn:           'EN',
@@ -432,7 +445,7 @@ const I18N = {
   en: {
     title:             'Timezone Converter',
     subtitle:          'Drag slider to see world city times instantly',
-    sliderLabel:       'Reference Time (Beijing)',
+    sliderLabel:       'Reference Time',
     liveBtn:           'Live',
     copyBtn:           'Copy',
     copiedBtn:         'Copied',
@@ -440,6 +453,7 @@ const I18N = {
     addBtn:            '＋ Add City / Region',
     footer:            'Vanilla JavaScript · No dependencies · Data from IANA Timezone Database',
     modalTitle:        '🔍 Add City',
+    refModalTitle:     '🔍 Select Reference City',
     searchPlaceholder: 'Search city or country…',
     modalEmpty:        'No cities found 😕',
     langBtn:           '中',
@@ -447,9 +461,9 @@ const I18N = {
 };
 
 // ── localStorage 持久化 ───────────────────────────────────────────────────────
-const STORAGE_KEY = 'tz_cities_v1';
-const LANG_KEY    = 'tz_lang_v1';
-const DEFAULT_IDS = ['beijing','tokyo','london','newyork','mexico','saopaulo','toronto','argentina','sydney','cairo'];
+const STORAGE_KEY  = 'tz_cities_v1';
+const LANG_KEY     = 'tz_lang_v1';
+const REFCITY_KEY  = 'tz_refcity_v1';
 
 function saveCities() {
   try { localStorage.setItem(STORAGE_KEY, JSON.stringify(CITIES.map(c => c.id))); } catch(e) {}
@@ -463,32 +477,45 @@ function loadCities() {
       if (list.length) return list;
     }
   } catch(e) {}
+  const DEFAULT_IDS = ['beijing','tokyo','london','newyork','mexico','saopaulo','toronto','argentina','sydney','cairo'];
   return DEFAULT_IDS.map(id => ALL_CITIES.find(c => c.id === id));
 }
 function loadLang() {
-  try {
-    const v = localStorage.getItem(LANG_KEY);
-    if (v === 'zh' || v === 'en') return v;
-  } catch(e) {}
+  try { const v = localStorage.getItem(LANG_KEY); if (v === 'zh' || v === 'en') return v; } catch(e) {}
   return 'zh';
 }
-function saveLang() {
-  try { localStorage.setItem(LANG_KEY, lang); } catch(e) {}
+function saveLang() { try { localStorage.setItem(LANG_KEY, lang); } catch(e) {} }
+function loadRefCity() {
+  try {
+    const id = localStorage.getItem(REFCITY_KEY);
+    if (id) { const c = ALL_CITIES.find(c => c.id === id); if (c) return c; }
+  } catch(e) {}
+  return ALL_CITIES.find(c => c.id === 'beijing');
 }
+function saveRefCity() { try { localStorage.setItem(REFCITY_KEY, refCity.id); } catch(e) {} }
 
-// ── 当前状态 ──────────────────────────────────────────────────────────────────
+// ── 状态 ──────────────────────────────────────────────────────────────────────
 let CITIES = loadCities();
 let lang = loadLang();
+let refCity = loadRefCity();
 let use12h = false, sliderMinutes = 720, useSlider = false;
-let selectedDateStr = new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Shanghai',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
+let selectedDateStr = new Intl.DateTimeFormat('en-CA',{timeZone:refCity.tz,year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
+let modalMode = 'add'; // 'add' | 'ref'
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 function pad(n) { return String(n).padStart(2,'0'); }
 
+function parseUtcOffsetMins(str) {
+  const m = str.match(/UTC([+-])(\d+)(?::(\d+))?/);
+  if (!m) return 0;
+  return (m[1] === '+' ? 1 : -1) * (parseInt(m[2]) * 60 + parseInt(m[3] || '0'));
+}
+
 function getRefDate() {
   if (!useSlider) return new Date();
   const [y,m,d] = selectedDateStr.split('-').map(Number);
-  return new Date(Date.UTC(y,m-1,d,Math.floor(sliderMinutes/60)%24,sliderMinutes%60,0) - 8*3600000);
+  const offsetMins = parseUtcOffsetMins(getTzOffset(refCity.tz));
+  return new Date(Date.UTC(y,m-1,d,Math.floor(sliderMinutes/60)%24,sliderMinutes%60,0) - offsetMins * 60000);
 }
 
 function formatTime(date, tz, fmt12) {
@@ -532,7 +559,13 @@ function getTzOffset(tz) {
   } catch(e2) { return tz; }
 }
 
-// ── Apply i18n ────────────────────────────────────────────────────────────────
+// ── i18n + ref city UI ────────────────────────────────────────────────────────
+function updateRefCityUI() {
+  const name = lang === 'en' ? refCity.nameEn : refCity.name;
+  document.getElementById('refCityFlag').textContent = refCity.flag;
+  document.getElementById('refCityName').textContent = name;
+}
+
 function applyI18n() {
   const t = I18N[lang];
   document.getElementById('i18nTitle').textContent = t.title;
@@ -542,9 +575,10 @@ function applyI18n() {
   document.getElementById('langBtn').textContent = t.langBtn;
   document.getElementById('addBtn').textContent = t.addBtn;
   document.getElementById('i18nFooter').textContent = t.footer;
-  document.getElementById('i18nModalTitle').textContent = t.modalTitle;
+  document.getElementById('i18nModalTitle').textContent = modalMode === 'ref' ? t.refModalTitle : t.modalTitle;
   document.getElementById('modalSearch').placeholder = t.searchPlaceholder;
   document.documentElement.lang = lang === 'en' ? 'en' : 'zh-CN';
+  updateRefCityUI();
 }
 
 // ── Build cards ───────────────────────────────────────────────────────────────
@@ -653,29 +687,27 @@ function onDragEnd() {
 function updateAll() {
   const t = I18N[lang];
   const refDate = getRefDate();
-  document.getElementById('sliderDisplay').textContent = formatTime(refDate, 'Asia/Shanghai', false);
+  document.getElementById('sliderDisplay').textContent = formatTime(refDate, refCity.tz, false);
   if (!useSlider) {
-    const parts = new Intl.DateTimeFormat('en-US',{timeZone:'Asia/Shanghai',hour:'2-digit',minute:'2-digit',hour12:false}).format(refDate).split(':');
+    const parts = new Intl.DateTimeFormat('en-US',{timeZone:refCity.tz,hour:'2-digit',minute:'2-digit',hour12:false}).format(refDate).split(':');
     const mins = Math.round((parseInt(parts[0])*60+parseInt(parts[1]))/15)*15;
     sliderMinutes = mins;
     document.getElementById('timeSlider').value = mins;
     updateFill(mins);
   }
-  // Update live dot and date style
   document.getElementById('liveDot').classList.toggle('paused', useSlider);
   document.getElementById('liveDate').classList.toggle('custom', useSlider);
-  // Update live/fmt buttons
   document.getElementById('liveBtn').classList.toggle('active', !useSlider);
   document.getElementById('fmtBtn').classList.toggle('active', use12h);
   document.getElementById('fmtBtn').textContent = use12h ? '12h' : '24h';
 
-  const bjDateStr = new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Shanghai',year:'numeric',month:'2-digit',day:'2-digit'}).format(refDate);
+  const refDateStr = new Intl.DateTimeFormat('en-CA',{timeZone:refCity.tz,year:'numeric',month:'2-digit',day:'2-digit'}).format(refDate);
   CITIES.forEach(city => {
     if (!city || !document.getElementById('time-'+city.id)) return;
     const timeStr = formatTime(refDate, city.tz, use12h);
     const dateStr = formatDate(refDate, city.tz);
     const cityDate = new Intl.DateTimeFormat('en-CA',{timeZone:city.tz,year:'numeric',month:'2-digit',day:'2-digit'}).format(refDate);
-    const diff = Math.round((new Date(cityDate) - new Date(bjDateStr)) / 86400000);
+    const diff = Math.round((new Date(cityDate) - new Date(refDateStr)) / 86400000);
     const badge = diff > 0 ? `<span class="day-badge next">+${diff}${t.dayUnit}</span>` : diff < 0 ? `<span class="day-badge prev">${diff}${t.dayUnit}</span>` : '';
     const timeEl = document.getElementById('time-'+city.id);
     if (use12h) {
@@ -694,7 +726,7 @@ function updateLiveClock() {
   if (!useSlider) {
     const liveDateStr = new Intl.DateTimeFormat(locale,{year:'numeric',month:'long',day:'numeric',weekday:'long'}).format(now);
     document.getElementById('liveDate').textContent = liveDateStr;
-    selectedDateStr = new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Shanghai',year:'numeric',month:'2-digit',day:'2-digit'}).format(now);
+    selectedDateStr = new Intl.DateTimeFormat('en-CA',{timeZone:refCity.tz,year:'numeric',month:'2-digit',day:'2-digit'}).format(now);
     document.getElementById('datePicker').value = selectedDateStr;
   }
 }
@@ -715,38 +747,76 @@ function fuzzyMatch(query, target) {
 function renderModalList(query) {
   const t = I18N[lang];
   const list = document.getElementById('modalList');
-  const activeIds = new Set(CITIES.map(c => c.id));
   const results = ALL_CITIES.filter(c =>
-    fuzzyMatch(query, c.name) || fuzzyMatch(query, c.nameEn) || fuzzyMatch(query, c.country)
+    fuzzyMatch(query, c.name) || fuzzyMatch(query, c.nameEn) ||
+    fuzzyMatch(query, c.country) || fuzzyMatch(query, COUNTRY_EN[c.country] || '')
   );
   if (!results.length) { list.innerHTML = `<div class="modal-empty">${t.modalEmpty}</div>`; return; }
-  list.innerHTML = results.map(c => {
-    const has = activeIds.has(c.id);
-    const primaryName = lang === 'en' ? c.nameEn : c.name;
-    const secondaryName = lang === 'en' ? c.name : c.nameEn;
-    const countryName = lang === 'en' ? (COUNTRY_EN[c.country] || c.country) : c.country;
-    return `<div class="city-item${has?' already':''}" data-id="${c.id}">
-      <span class="city-item-flag">${c.flag}</span>
-      <div class="city-item-info">
-        <div class="city-item-name">${primaryName} <span style="font-weight:400;color:var(--text-dim);font-size:0.7rem">${secondaryName}</span></div>
-        <div class="city-item-sub">${countryName}</div>
-      </div>
-      <span class="city-item-tz">${getTzOffset(c.tz)}</span>
-      <span class="city-item-add">${has?'✓':'＋'}</span>
-    </div>`;
-  }).join('');
-  list.querySelectorAll('.city-item:not(.already)').forEach(el => {
-    el.addEventListener('click', () => {
-      const city = ALL_CITIES.find(c => c.id === el.dataset.id);
-      if (city && !CITIES.find(c => c.id === city.id)) {
-        CITIES.push(city); saveCities(); buildCards();
-        renderModalList(document.getElementById('modalSearch').value);
-      }
+
+  if (modalMode === 'ref') {
+    list.innerHTML = results.map(c => {
+      const isRef = c.id === refCity.id;
+      const primaryName = lang === 'en' ? c.nameEn : c.name;
+      const secondaryName = lang === 'en' ? c.name : c.nameEn;
+      const countryName = lang === 'en' ? (COUNTRY_EN[c.country] || c.country) : c.country;
+      return `<div class="city-item${isRef?' already':''}" data-id="${c.id}">
+        <span class="city-item-flag">${c.flag}</span>
+        <div class="city-item-info">
+          <div class="city-item-name">${primaryName} <span style="font-weight:400;color:var(--text-dim);font-size:0.7rem">${secondaryName}</span></div>
+          <div class="city-item-sub">${countryName}</div>
+        </div>
+        <span class="city-item-tz">${getTzOffset(c.tz)}</span>
+        <span class="city-item-add">${isRef?'✓':'›'}</span>
+      </div>`;
+    }).join('');
+    list.querySelectorAll('.city-item:not(.already)').forEach(el => {
+      el.addEventListener('click', () => {
+        const city = ALL_CITIES.find(c => c.id === el.dataset.id);
+        if (!city) return;
+        refCity = city;
+        saveRefCity();
+        useSlider = false; // reset to live after ref city change
+        selectedDateStr = new Intl.DateTimeFormat('en-CA',{timeZone:refCity.tz,year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
+        document.getElementById('datePicker').value = selectedDateStr;
+        updateRefCityUI();
+        closeModal();
+        updateAll();
+        updateLiveClock();
+      });
     });
-  });
+  } else {
+    const activeIds = new Set(CITIES.map(c => c.id));
+    list.innerHTML = results.map(c => {
+      const has = activeIds.has(c.id);
+      const primaryName = lang === 'en' ? c.nameEn : c.name;
+      const secondaryName = lang === 'en' ? c.name : c.nameEn;
+      const countryName = lang === 'en' ? (COUNTRY_EN[c.country] || c.country) : c.country;
+      return `<div class="city-item${has?' already':''}" data-id="${c.id}">
+        <span class="city-item-flag">${c.flag}</span>
+        <div class="city-item-info">
+          <div class="city-item-name">${primaryName} <span style="font-weight:400;color:var(--text-dim);font-size:0.7rem">${secondaryName}</span></div>
+          <div class="city-item-sub">${countryName}</div>
+        </div>
+        <span class="city-item-tz">${getTzOffset(c.tz)}</span>
+        <span class="city-item-add">${has?'✓':'＋'}</span>
+      </div>`;
+    }).join('');
+    list.querySelectorAll('.city-item:not(.already)').forEach(el => {
+      el.addEventListener('click', () => {
+        const city = ALL_CITIES.find(c => c.id === el.dataset.id);
+        if (city && !CITIES.find(c => c.id === city.id)) {
+          CITIES.push(city); saveCities(); buildCards();
+          renderModalList(document.getElementById('modalSearch').value);
+        }
+      });
+    });
+  }
 }
 
-function openModal() {
+function openModal(mode = 'add') {
+  modalMode = mode;
+  const t = I18N[lang];
+  document.getElementById('i18nModalTitle').textContent = mode === 'ref' ? t.refModalTitle : t.modalTitle;
   document.getElementById('modalOverlay').classList.add('open');
   const inp = document.getElementById('modalSearch');
   inp.value = ''; renderModalList('');
@@ -755,24 +825,22 @@ function openModal() {
 function closeModal() { document.getElementById('modalOverlay').classList.remove('open'); }
 
 // ── Events ────────────────────────────────────────────────────────────────────
-// Slider
 const slider = document.getElementById('timeSlider');
 slider.addEventListener('input', () => {
   useSlider = true;
   sliderMinutes = parseInt(slider.value);
   updateFill(sliderMinutes);
-  // Show selected date in live bar
   document.getElementById('liveDate').textContent = formatDateDisplay(selectedDateStr);
   updateAll();
 });
 
 // Date picker
 const datePicker = document.getElementById('datePicker');
-const now = new Date();
-const minDate = new Date(now); minDate.setFullYear(minDate.getFullYear()-1);
-const maxDate = new Date(now); maxDate.setFullYear(maxDate.getFullYear()+1);
-datePicker.min = new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Shanghai',year:'numeric',month:'2-digit',day:'2-digit'}).format(minDate);
-datePicker.max = new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Shanghai',year:'numeric',month:'2-digit',day:'2-digit'}).format(maxDate);
+const _now = new Date();
+const _minDate = new Date(_now); _minDate.setFullYear(_minDate.getFullYear()-1);
+const _maxDate = new Date(_now); _maxDate.setFullYear(_maxDate.getFullYear()+1);
+datePicker.min = new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Shanghai',year:'numeric',month:'2-digit',day:'2-digit'}).format(_minDate);
+datePicker.max = new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Shanghai',year:'numeric',month:'2-digit',day:'2-digit'}).format(_maxDate);
 datePicker.addEventListener('change', () => {
   if (!datePicker.value) return;
   selectedDateStr = datePicker.value;
@@ -781,7 +849,10 @@ datePicker.addEventListener('change', () => {
   updateAll();
 });
 
-// Live button (reset to live mode)
+// Ref city picker
+document.getElementById('refCityBtn').addEventListener('click', () => openModal('ref'));
+
+// Live button
 document.getElementById('liveBtn').addEventListener('click', () => {
   useSlider = false;
   updateAll();
@@ -789,31 +860,23 @@ document.getElementById('liveBtn').addEventListener('click', () => {
 });
 
 // Format toggle
-document.getElementById('fmtBtn').addEventListener('click', function() {
-  use12h = !use12h;
-  updateAll();
-});
+document.getElementById('fmtBtn').addEventListener('click', function() { use12h = !use12h; updateAll(); });
 
 // Lang toggle
 document.getElementById('langBtn').addEventListener('click', () => {
   lang = lang === 'zh' ? 'en' : 'zh';
   saveLang();
   applyI18n();
-  // Rebuild cards for new language names
   buildCards();
-  // Update live clock for new locale
   updateLiveClock();
-  if (useSlider) {
-    document.getElementById('liveDate').textContent = formatDateDisplay(selectedDateStr);
-  }
-  // Re-render modal list if open
+  if (useSlider) document.getElementById('liveDate').textContent = formatDateDisplay(selectedDateStr);
   if (document.getElementById('modalOverlay').classList.contains('open')) {
     renderModalList(document.getElementById('modalSearch').value);
   }
 });
 
 // Modal
-document.getElementById('addBtn').addEventListener('click', openModal);
+document.getElementById('addBtn').addEventListener('click', () => openModal('add'));
 document.getElementById('modalClose').addEventListener('click', closeModal);
 document.getElementById('modalOverlay').addEventListener('click', e => { if(e.target===document.getElementById('modalOverlay')) closeModal(); });
 document.getElementById('modalSearch').addEventListener('input', e => renderModalList(e.target.value));
