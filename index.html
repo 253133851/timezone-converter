@@ -99,7 +99,7 @@
     /* Modal */
     .modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,.72); display:flex; align-items:flex-end; justify-content:center; z-index:900; opacity:0; pointer-events:none; transition:opacity .2s; padding:0; }
     .modal-overlay.open { opacity:1; pointer-events:all; }
-    .modal-box { background:var(--surface); border:1px solid var(--border); border-radius:20px 20px 0 0; width:100%; max-width:600px; height:85vh; display:flex; flex-direction:column; box-shadow:0 -8px 40px rgba(0,0,0,.5); transform:translateY(20px); transition:transform .2s; }
+    .modal-box { background:var(--surface); border:1px solid var(--border); border-radius:20px 20px 0 0; width:100%; max-width:600px; height:85vh; height:85dvh; max-height:92vh; display:flex; flex-direction:column; box-shadow:0 -8px 40px rgba(0,0,0,.5); transform:translateY(20px); transition:transform .2s; }
     .modal-overlay.open .modal-box { transform:translateY(0); }
     .modal-header { display:flex; align-items:center; justify-content:space-between; padding:20px 20px 0; flex-shrink:0; }
     .modal-title { font-size:1rem; font-weight:600; color:var(--text); }
@@ -233,7 +233,7 @@ const ALL_CITIES = [
   {id:'guangzhou',  name:'广州',          nameEn:'Guangzhou',       country:'中国',         flag:'🇨🇳', tz:'Asia/Shanghai',                   accent:'#c4b5fd'},
   {id:'shenzhen',   name:'深圳',          nameEn:'Shenzhen',        country:'中国',         flag:'🇨🇳', tz:'Asia/Shanghai',                   accent:'#7c3aed'},
   {id:'hongkong',   name:'香港',          nameEn:'Hong Kong',       country:'中国香港',     flag:'🇭🇰', tz:'Asia/Hong_Kong',                  accent:'#fb7185'},
-  {id:'taipei',     name:'台北',          nameEn:'Taipei',          country:'中国台湾',     flag:'🇹🇼', tz:'Asia/Taipei',                     accent:'#38bdf8'},
+  {id:'taipei',     name:'台北',          nameEn:'Taipei',          country:'中国台湾',     flag:'🇨🇳', tz:'Asia/Taipei',                     accent:'#38bdf8'},
   {id:'macau',      name:'澳门',          nameEn:'Macau',           country:'中国澳门',     flag:'🇲🇴', tz:'Asia/Macau',                      accent:'#67e8f9'},
   {id:'tokyo',      name:'东京',          nameEn:'Tokyo',           country:'日本',         flag:'🇯🇵', tz:'Asia/Tokyo',                      accent:'#f87171'},
   {id:'osaka',      name:'大阪',          nameEn:'Osaka',           country:'日本',         flag:'🇯🇵', tz:'Asia/Tokyo',                      accent:'#fca5a5'},
@@ -813,16 +813,44 @@ function renderModalList(query) {
   }
 }
 
+function _syncModalToViewport() {
+  const overlay = document.getElementById('modalOverlay');
+  if (!overlay.classList.contains('open')) return;
+  const vv = window.visualViewport;
+  if (!vv) return;
+  overlay.style.height = vv.height + 'px';
+  overlay.style.top = vv.offsetTop + 'px';
+  overlay.style.bottom = 'auto';
+  const box = overlay.querySelector('.modal-box');
+  if (box) box.style.maxHeight = Math.round(vv.height * 0.92) + 'px';
+}
+
 function openModal(mode = 'add') {
   modalMode = mode;
   const t = I18N[lang];
   document.getElementById('i18nModalTitle').textContent = mode === 'ref' ? t.refModalTitle : t.modalTitle;
-  document.getElementById('modalOverlay').classList.add('open');
+  const overlay = document.getElementById('modalOverlay');
+  overlay.style.cssText = '';
+  overlay.classList.add('open');
   const inp = document.getElementById('modalSearch');
   inp.value = ''; renderModalList('');
   setTimeout(() => inp.focus(), 120);
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener('resize', _syncModalToViewport);
+    window.visualViewport.addEventListener('scroll', _syncModalToViewport);
+  }
 }
-function closeModal() { document.getElementById('modalOverlay').classList.remove('open'); }
+function closeModal() {
+  const overlay = document.getElementById('modalOverlay');
+  overlay.classList.remove('open');
+  overlay.style.cssText = '';
+  const box = overlay.querySelector('.modal-box');
+  if (box) box.style.maxHeight = '';
+  if (window.visualViewport) {
+    window.visualViewport.removeEventListener('resize', _syncModalToViewport);
+    window.visualViewport.removeEventListener('scroll', _syncModalToViewport);
+  }
+}
 
 // ── Events ────────────────────────────────────────────────────────────────────
 const slider = document.getElementById('timeSlider');
