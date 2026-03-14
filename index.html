@@ -105,6 +105,8 @@
     /* Modal */
     .modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,.72); display:flex; align-items:flex-end; justify-content:center; z-index:900; opacity:0; pointer-events:none; transition:opacity .2s; padding:0; }
     .modal-overlay.open { opacity:1; pointer-events:all; }
+    /* iOS Safari: 覆盖安全区域顶部，保持与页面背景一致，防止状态栏区域变黑 */
+    .modal-overlay::before { content:''; position:absolute; top:0; left:0; right:0; height:env(safe-area-inset-top,0px); background:#0f1117; z-index:1; pointer-events:none; }
     .modal-box { background:var(--surface); border:1px solid var(--border); border-radius:20px 20px 0 0; width:100%; max-width:600px; height:85vh; height:85dvh; max-height:92vh; display:flex; flex-direction:column; box-shadow:0 -8px 40px rgba(0,0,0,.5); transform:translateY(20px); transition:transform .2s; }
     .modal-overlay.open .modal-box { transform:translateY(0); }
     .modal-header { display:flex; align-items:center; justify-content:space-between; padding:20px 20px 0; flex-shrink:0; }
